@@ -5,7 +5,6 @@ import { useState } from 'react'
 
 // Next Imports
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
 
 // MUI Imports
 import useMediaQuery from '@mui/material/useMediaQuery'
@@ -20,7 +19,6 @@ import classnames from 'classnames'
 
 // Type Imports
 import type { SystemMode } from '@core/types'
-import type { Locale } from '@configs/i18n'
 
 // Component Imports
 import DirectionalIcon from '@components/DirectionalIcon'
@@ -30,9 +28,6 @@ import CustomTextField from '@core/components/mui/TextField'
 // Hook Imports
 import { useImageVariant } from '@core/hooks/useImageVariant'
 import { useSettings } from '@core/hooks/useSettings'
-
-// Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
 
 // Styled Custom Components
 const ResetPasswordIllustration = styled('img')(({ theme }) => ({
@@ -70,7 +65,7 @@ const ResetPasswordV2 = ({ mode }: { mode: SystemMode }) => {
   const lightIllustration = '/images/illustrations/auth/v2-reset-password-light.png'
 
   // Hooks
-  const { lang: locale } = useParams()
+
   const { settings } = useSettings()
   const theme = useTheme()
   const hidden = useMediaQuery(theme.breakpoints.down('md'))
@@ -102,10 +97,7 @@ const ResetPasswordV2 = ({ mode }: { mode: SystemMode }) => {
         )}
       </div>
       <div className='flex justify-center items-center bs-full bg-backgroundPaper !min-is-full p-6 md:!min-is-[unset] md:p-12 md:is-[480px]'>
-        <Link
-          href={getLocalizedUrl('/', locale as Locale)}
-          className='absolute block-start-5 sm:block-start-[33px] inline-start-6 sm:inline-start-[38px]'
-        >
+        <Link href={'/'} className='absolute block-start-5 sm:block-start-[33px] inline-start-6 sm:inline-start-[38px]'>
           <Logo />
         </Link>
         <div className='flex flex-col gap-6 is-full sm:is-auto md:is-full sm:max-is-[400px] md:max-is-[unset] mbs-11 sm:mbs-14 md:mbs-0'>
@@ -157,10 +149,7 @@ const ResetPasswordV2 = ({ mode }: { mode: SystemMode }) => {
               Set New Password
             </Button>
             <Typography className='flex justify-center items-center' color='primary.main'>
-              <Link
-                href={getLocalizedUrl('/pages/auth/login-v2', locale as Locale)}
-                className='flex items-center gap-1.5'
-              >
+              <Link href={'/pages/auth/login-v2'} className='flex items-center gap-1.5'>
                 <DirectionalIcon
                   ltrIconClass='tabler-chevron-left'
                   rtlIconClass='tabler-chevron-right'

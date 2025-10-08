@@ -5,7 +5,7 @@ import { useState } from 'react'
 
 // Next Imports
 import Link from 'next/link'
-import { useParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
 // MUI Imports
 import useMediaQuery from '@mui/material/useMediaQuery'
@@ -28,7 +28,6 @@ import { Controller, useForm } from 'react-hook-form'
 
 // Type Imports
 import type { SystemMode } from '@core/types'
-import type { Locale } from '@configs/i18n'
 
 // Component Imports
 import Logo from '@components/layout/shared/Logo'
@@ -39,16 +38,14 @@ import CustomInputLabel from '@/components/form/CustomInputLabel'
 import { useImageVariant } from '@core/hooks/useImageVariant'
 import { useSettings } from '@core/hooks/useSettings'
 
-// Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
-
 // No API imports needed for fetch
 
 type FormValues = {
   email: string
   password: string
   fullName: string
-  studentCode: string
+  phone: string
+  department: string
 }
 
 // Styled Custom Components
@@ -89,7 +86,7 @@ const Register = ({ mode }: { mode: SystemMode }) => {
   const borderedLightIllustration = '/images/illustrations/auth/v2-register-light-border.png'
 
   // Hooks
-  const { lang: locale } = useParams()
+
   const router = useRouter()
   const { settings } = useSettings()
   const theme = useTheme()
@@ -116,8 +113,9 @@ const Register = ({ mode }: { mode: SystemMode }) => {
     defaultValues: {
       email: '',
       fullName: '',
-      studentCode: '',
-      password: ''
+      password: '',
+      phone: '',
+      department: ''
     },
     mode: 'onBlur'
   })
@@ -129,8 +127,9 @@ const Register = ({ mode }: { mode: SystemMode }) => {
     const payload = {
       email: data.email,
       full_name: data.fullName,
-      student_code: data.studentCode,
-      password: data.password
+      password: data.password,
+      phone: data.phone,
+      department: data.department
     }
 
     try {
@@ -158,10 +157,6 @@ const Register = ({ mode }: { mode: SystemMode }) => {
         if (data.error === 'Email already exists') {
           setError('email', {
             message: 'Email already exists'
-          })
-        } else if (data.error === 'User creation failed' && data.message.includes('Student code already exists')) {
-          setError('studentCode', {
-            message: 'Student code already exists'
           })
         } else {
           toast.error(data.message || 'Registration failed!', {
@@ -199,9 +194,9 @@ const Register = ({ mode }: { mode: SystemMode }) => {
         <RegisterIllustration src={characterIllustration} alt='character-illustration' />
         {!hidden && <MaskImg alt='mask' src={authBackground} />}
       </div>
-      <div className='flex justify-center items-center bs-full bg-backgroundPaper !min-is-full p-6 md:!min-is-[unset] md:p-12 md:is-[480px]'>
+      <div className='flex justify-center items-center bs-full bg-backgroundPaper !min-is-full p-6 md:!min-is-[unset] md:p-12 md:is-[700px]'>
         <Link
-          href={getLocalizedUrl('/login', locale as Locale)}
+          href={'/login'}
           className='absolute block-start-5 sm:block-start-[33px] inline-start-6 sm:inline-start-[38px]'
         >
           <Logo />
@@ -212,16 +207,16 @@ const Register = ({ mode }: { mode: SystemMode }) => {
             <Typography>Make your app management easy and fun!</Typography>
           </div>
           <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)} className='flex flex-col'>
-            <Grid container spacing={6}>
+            <Grid container spacing={3}>
               <Grid size={{ xs: 12 }}>
-                <CustomInputLabel>Email</CustomInputLabel>
+                <CustomInputLabel>Họ và tên</CustomInputLabel>
                 <Controller
-                  name='email'
+                  name='fullName'
                   control={control}
                   rules={{
                     validate: value => {
                       if (!value) {
-                        return 'Email is required'
+                        return 'Vui lòng nhập họ và tên'
                       }
                     }
                   }}
@@ -229,7 +224,34 @@ const Register = ({ mode }: { mode: SystemMode }) => {
                     <CustomTextField
                       fullWidth
                       required
-                      placeholder='Enter your email'
+                      placeholder='Nhập họ và tên'
+                      {...field}
+                      {...(errors.fullName && {
+                        error: true,
+                        helperText: errors.fullName.message
+                      })}
+                    />
+                  )}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 6 }}>
+                <CustomInputLabel>Email</CustomInputLabel>
+                <Controller
+                  name='email'
+                  control={control}
+                  rules={{
+                    validate: value => {
+                      if (!value) {
+                        return 'Vui lòng nhập email'
+                      }
+                    }
+                  }}
+                  render={({ field }) => (
+                    <CustomTextField
+                      fullWidth
+                      required
+                      placeholder='Nhập email'
                       {...field}
                       onChange={e => {
                         field.onChange(e.target.value)
@@ -243,15 +265,15 @@ const Register = ({ mode }: { mode: SystemMode }) => {
                 />
               </Grid>
 
-              <Grid size={{ xs: 12 }}>
-                <CustomInputLabel>Full Name</CustomInputLabel>
+              <Grid size={{ xs: 6 }}>
+                <CustomInputLabel>Số điện thoại</CustomInputLabel>
                 <Controller
-                  name='fullName'
+                  name='phone'
                   control={control}
                   rules={{
                     validate: value => {
                       if (!value) {
-                        return 'Full name is required'
+                        return 'Vui lòng nhập số điện thoại'
                       }
                     }
                   }}
@@ -259,41 +281,14 @@ const Register = ({ mode }: { mode: SystemMode }) => {
                     <CustomTextField
                       fullWidth
                       required
-                      placeholder='Enter your full name'
-                      {...field}
-                      {...(errors.fullName && {
-                        error: true,
-                        helperText: errors.fullName.message
-                      })}
-                    />
-                  )}
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12 }}>
-                <CustomInputLabel>Student Code</CustomInputLabel>
-                <Controller
-                  name='studentCode'
-                  control={control}
-                  rules={{
-                    validate: value => {
-                      if (!value) {
-                        return 'Student code is required'
-                      }
-                    }
-                  }}
-                  render={({ field }) => (
-                    <CustomTextField
-                      fullWidth
-                      required
-                      placeholder='Enter your student code'
+                      placeholder='Nhập số điện thoại'
                       {...field}
                       onChange={e => {
                         field.onChange(e.target.value)
                       }}
-                      {...(errors.studentCode && {
+                      {...(errors.phone && {
                         error: true,
-                        helperText: errors.studentCode.message
+                        helperText: errors.phone.message
                       })}
                     />
                   )}
@@ -301,22 +296,18 @@ const Register = ({ mode }: { mode: SystemMode }) => {
               </Grid>
 
               <Grid size={{ xs: 12 }}>
-                <CustomInputLabel>Password</CustomInputLabel>
+                <CustomInputLabel>Mật khẩu</CustomInputLabel>
                 <Controller
                   name='password'
                   control={control}
                   rules={{
                     validate: value => {
                       if (!value) {
-                        return 'Password is required'
+                        return 'Vui lòng nhập mật khẩu'
                       }
 
                       if (value.length < 8) {
-                        return 'Password must be at least 8 characters'
-                      }
-
-                      if (value.length > 12) {
-                        return 'Password must be at most 12 characters'
+                        return 'Mật khẩu phải có ít nhất 8 ký tự'
                       }
 
                       return true
@@ -327,7 +318,7 @@ const Register = ({ mode }: { mode: SystemMode }) => {
                       fullWidth
                       required
                       {...field}
-                      placeholder='Enter your password'
+                      placeholder='Nhập mật khẩu'
                       id='outlined-adornment-password'
                       type={isPasswordShown ? 'text' : 'password'}
                       slotProps={{
@@ -354,6 +345,25 @@ const Register = ({ mode }: { mode: SystemMode }) => {
                   )}
                 />
               </Grid>
+
+              <Grid size={{ xs: 12 }}>
+                <CustomInputLabel>Khoa</CustomInputLabel>
+                <Controller
+                  name='department'
+                  control={control}
+                  render={({ field }) => (
+                    <CustomTextField
+                      fullWidth
+                      required
+                      placeholder='Nhập khoa'
+                      {...field}
+                      onChange={e => {
+                        field.onChange(e.target.value)
+                      }}
+                    />
+                  )}
+                />
+              </Grid>
               <FormControlLabel
                 control={<Checkbox />}
                 label={
@@ -370,7 +380,7 @@ const Register = ({ mode }: { mode: SystemMode }) => {
               </Button>
               <div className='flex justify-center items-center flex-wrap gap-2'>
                 <Typography>Already have an account?</Typography>
-                <Typography component={Link} href={getLocalizedUrl('/login', locale as Locale)} color='primary.main'>
+                <Typography component={Link} href={'/login'} color='primary.main'>
                   Sign in instead
                 </Typography>
               </div>

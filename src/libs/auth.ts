@@ -55,10 +55,7 @@ export const authOptions: NextAuthOptions = {
             console.error('[NEXT_AUTH] Login failed:', errorData)
 
             // Handle different error response formats
-            const errorMessage =
-              errorData.message ||
-              errorData.messages?.join(', ') ||
-              'Login failed'
+            const errorMessage = errorData.message || errorData.messages?.join(', ') || 'Login failed'
 
             // Return JSON string for better error handling in frontend
             throw new Error(
@@ -75,7 +72,7 @@ export const authOptions: NextAuthOptions = {
              * user data below. Below return statement will set the user object in the token and the same is set in
              * the session which will be accessible all over the app.
              */
-          
+
             return await loginRes.json()
           }
 

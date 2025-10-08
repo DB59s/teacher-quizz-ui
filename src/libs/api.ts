@@ -29,9 +29,7 @@ export class CustomError extends Error {
 export const isServer = typeof window === 'undefined'
 
 // Use the same API URL as auth.ts for consistency
-const baseUrlAPI = isServer
-  ? process.env.API_URL
-  : process.env.NEXT_PUBLIC_API_URL
+const baseUrlAPI = isServer ? process.env.API_URL : process.env.NEXT_PUBLIC_API_URL
 
 let clientInstance: AxiosInstance | null = null
 let serverInstance: AxiosInstance | null = null
