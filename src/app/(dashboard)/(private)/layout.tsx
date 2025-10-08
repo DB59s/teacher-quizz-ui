@@ -33,7 +33,7 @@ const Layout = async (props: ChildrenType) => {
 
   return (
     <Providers direction={direction}>
-      {/* <AuthGuard> */}
+      <AuthGuard>
         <LayoutWrapper
           systemMode={systemMode}
           verticalLayout={
@@ -56,7 +56,7 @@ const Layout = async (props: ChildrenType) => {
           </Button>
         </ScrollToTop>
         <Customizer dir={direction} disableDirection />
-      {/* </AuthGuard> */}
+      </AuthGuard>
     </Providers>
   )
 }
