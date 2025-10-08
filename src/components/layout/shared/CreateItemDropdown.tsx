@@ -27,10 +27,12 @@ import { Add } from 'iconsax-react'
 
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
+import ModalCreateClass from '@/components/modal/ModalCreateClass'
 
 const CreateItemDropdown = () => {
   // States
   const [open, setOpen] = useState(false)
+  const [isModalCreateClassOpen, setIsModalCreateClassOpen] = useState(false)
 
   // Refs
   const anchorRef = useRef<HTMLButtonElement>(null)
@@ -48,7 +50,7 @@ const CreateItemDropdown = () => {
     setOpen(prevOpen => !prevOpen)
   }
 
-  const AddIcon = () => <Add size={24} color='white' className='bg-purple-600 rounded-full' />
+  const AddIcon = () => <Add size={24} color='white' className='bg-primary rounded-full' />
 
   return (
     <>
@@ -81,7 +83,7 @@ const CreateItemDropdown = () => {
             <Paper className={settings.skin === 'bordered' ? 'border shadow-none' : 'shadow-lg'}>
               <ClickAwayListener onClickAway={handleClose}>
                 <MenuList onKeyDown={handleClose}>
-                  <MenuItem component={Link} href='#' onClick={handleClose}>
+                  <MenuItem component={Link} href='#' onClick={() => {setIsModalCreateClassOpen(true); handleClose()}}>
                     Tạo mới lớp học
                   </MenuItem>
                   <MenuItem component={Link} href='#' onClick={handleClose}>
@@ -93,6 +95,7 @@ const CreateItemDropdown = () => {
           </Fade>
         )}
       </Popper>
+      <ModalCreateClass open={isModalCreateClassOpen} setOpen={setIsModalCreateClassOpen} />
     </>
   )
 }

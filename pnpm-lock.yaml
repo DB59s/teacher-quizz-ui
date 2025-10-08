@@ -33,9 +33,6 @@ importers:
       '@floating-ui/react':
         specifier: 0.27.2
         version: 0.27.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@formatjs/intl-localematcher':
-        specifier: 0.5.9
-        version: 0.5.9
       '@formkit/drag-and-drop':
         specifier: 0.2.6
         version: 0.2.6
@@ -144,9 +141,6 @@ importers:
       mapbox-gl:
         specifier: 3.9.0
         version: 3.9.0
-      negotiator:
-        specifier: 1.0.0
-        version: 1.0.0
       next:
         specifier: 15.1.2
         version: 15.1.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -220,9 +214,6 @@ importers:
       '@types/mapbox-gl':
         specifier: ^3.4.1
         version: 3.4.1
-      '@types/negotiator':
-        specifier: ^0.6.3
-        version: 0.6.3
       '@types/node':
         specifier: ^22.10.2
         version: 22.10.2
@@ -654,9 +645,6 @@ packages:
 
   '@floating-ui/utils@0.2.8':
     resolution: {integrity: sha512-kym7SodPp8/wloecOpcmSnWJsK7M0E5Wg8UcFA+uO4B9s5d0ywXOEro/8HM9x0rW+TljRzul/14UYz3TleT3ig==}
-
-  '@formatjs/intl-localematcher@0.5.9':
-    resolution: {integrity: sha512-8zkGu/sv5euxbjfZ/xmklqLyDGQSxsLqg8XOq88JW3cmJtzhCP8EtSJXlaKZnVO4beEaoiT9wj4eIoCQ9smwxA==}
 
   '@formkit/drag-and-drop@0.2.6':
     resolution: {integrity: sha512-yBRe5beAIRunguj/XrkW1Q1yiAG8qXyREHnn3H1osCGNUwQ/pLxQk9jbYvMGn+0/vnwa4N/he1MIteLG2GWbdQ==}
@@ -1538,9 +1526,6 @@ packages:
 
   '@types/mdurl@2.0.0':
     resolution: {integrity: sha512-RGdgjQUZba5p6QEFAVx2OGb8rQDL/cPRG7GiedRzMcJ1tYnUANBncjbSB1NRGwbvjcPeikRABz2nshyPk1bhWg==}
-
-  '@types/negotiator@0.6.3':
-    resolution: {integrity: sha512-JkXTOdKs5MF086b/pt8C3+yVp3iDUwG635L7oCH6HvJvvr6lSUU5oe/gLXnPEfYRROHjJIPgCV6cuAg8gGkntQ==}
 
   '@types/node@22.10.2':
     resolution: {integrity: sha512-Xxr6BBRCAOQixvonOye19wnzyDiUtTeqldOOmj3CkeblonbccA12PFwlufvRdrpjXxqnmUaeiU5EOA+7s5diUQ==}
@@ -3081,10 +3066,6 @@ packages:
 
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
-
-  negotiator@1.0.0:
-    resolution: {integrity: sha512-8Ofs/AUQh8MaEcrlq5xOX0CQ9ypTF5dl78mjlMNfOK08fzpgTHQRQPBxcPlEtIw0yRpws+Zo/3r+5WRby7u3Gg==}
-    engines: {node: '>= 0.6'}
 
   next-auth@4.24.11:
     resolution: {integrity: sha512-pCFXzIDQX7xmHFs4KVH4luCjaCbuPRtZ9oBUjUhOk84mZ9WVPf94n87TxYI4rSRf9HmfHEF8Yep3JrYDVOo3Cw==}
@@ -4644,10 +4625,6 @@ snapshots:
 
   '@floating-ui/utils@0.2.8': {}
 
-  '@formatjs/intl-localematcher@0.5.9':
-    dependencies:
-      tslib: 2.8.1
-
   '@formkit/drag-and-drop@0.2.6': {}
 
   '@fullcalendar/common@5.11.5':
@@ -5462,8 +5439,6 @@ snapshots:
       '@types/mdurl': 2.0.0
 
   '@types/mdurl@2.0.0': {}
-
-  '@types/negotiator@0.6.3': {}
 
   '@types/node@22.10.2':
     dependencies:
@@ -7230,8 +7205,6 @@ snapshots:
   nanoid@3.3.8: {}
 
   natural-compare@1.4.0: {}
-
-  negotiator@1.0.0: {}
 
   next-auth@4.24.11(next@15.1.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:

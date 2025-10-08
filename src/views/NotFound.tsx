@@ -1,8 +1,5 @@
 'use client'
 
-// Next Imports
-import Link from 'next/link'
-
 // MUI Imports
 import useMediaQuery from '@mui/material/useMediaQuery'
 import { styled, useTheme } from '@mui/material/styles'
@@ -48,7 +45,7 @@ const NotFound = ({ mode }: { mode: SystemMode }) => {
           <Typography variant='h4'>Page Not Found ⚠️</Typography>
           <Typography>we couldn&#39;t find the page you are looking for.</Typography>
         </div>
-        <Button href='/' component={Link} variant='contained'>
+        <Button href='/' variant='contained'>
           Back To Home
         </Button>
         <img

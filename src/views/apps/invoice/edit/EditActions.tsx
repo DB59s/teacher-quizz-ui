@@ -5,7 +5,6 @@ import { useState } from 'react'
 
 // Next Imports
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -16,16 +15,10 @@ import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Switch from '@mui/material/Switch'
 
-// Type Imports
-import type { Locale } from '@configs/i18n'
-
 // Component Imports
 import AddPaymentDrawer from '@views/apps/invoice/shared/AddPaymentDrawer'
 import SendInvoiceDrawer from '@views/apps/invoice/shared/SendInvoiceDrawer'
 import CustomTextField from '@core/components/mui/TextField'
-
-// Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
 
 const EditActions = ({ id }: { id: string }) => {
   // States
@@ -33,7 +26,6 @@ const EditActions = ({ id }: { id: string }) => {
   const [sendDrawerOpen, setSendDrawerOpen] = useState(false)
 
   // Hooks
-  const { lang: locale } = useParams()
 
   return (
     <Grid container spacing={6}>
@@ -56,7 +48,7 @@ const EditActions = ({ id }: { id: string }) => {
                 color='secondary'
                 variant='tonal'
                 className='capitalize'
-                href={getLocalizedUrl(`/apps/invoice/preview/${id}`, locale as Locale)}
+                href={`/apps/invoice/preview/${id}`}
               >
                 Preview
               </Button>

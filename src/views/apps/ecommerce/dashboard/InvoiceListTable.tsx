@@ -5,7 +5,6 @@ import { useState, useEffect, useMemo } from 'react'
 
 // Next Imports
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -40,16 +39,12 @@ import type { RankingInfo } from '@tanstack/match-sorter-utils'
 // Type Imports
 import type { ThemeColor } from '@core/types'
 import type { InvoiceType } from '@/types/apps/invoiceTypes'
-import type { Locale } from '@configs/i18n'
 
 // Component Imports
 import OptionMenu from '@core/components/option-menu'
 import CustomAvatar from '@core/components/mui/Avatar'
 import TablePaginationComponent from '@components/TablePaginationComponent'
 import CustomTextField from '@core/components/mui/TextField'
-
-// Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
@@ -138,7 +133,6 @@ const InvoiceListTable = ({ invoiceData }: { invoiceData: InvoiceType[] }) => {
   const [globalFilter, setGlobalFilter] = useState('')
 
   // Hooks
-  const { lang: locale } = useParams()
 
   const columns = useMemo<ColumnDef<InvoiceTypeWithAction, any>[]>(
     () => [
@@ -169,7 +163,7 @@ const InvoiceListTable = ({ invoiceData }: { invoiceData: InvoiceType[] }) => {
         cell: ({ row }) => (
           <Typography
             component={Link}
-            href={getLocalizedUrl(`apps/invoice/preview/${row.original.id}`, locale as Locale)}
+            href={`apps/invoice/preview/${row.original.id}`}
             color='primary.main'
           >{`#${row.original.id}`}</Typography>
         )
@@ -218,10 +212,7 @@ const InvoiceListTable = ({ invoiceData }: { invoiceData: InvoiceType[] }) => {
               <i className='tabler-trash text-textSecondary' />
             </IconButton>
             <IconButton>
-              <Link
-                href={getLocalizedUrl(`apps/invoice/preview/${row.original.id}`, locale as Locale)}
-                className='flex'
-              >
+              <Link href={`apps/invoice/preview/${row.original.id}`} className='flex'>
                 <i className='tabler-eye text-textSecondary' />
               </Link>
             </IconButton>
@@ -237,7 +228,7 @@ const InvoiceListTable = ({ invoiceData }: { invoiceData: InvoiceType[] }) => {
                 {
                   text: 'Edit',
                   icon: 'tabler-pencil',
-                  href: getLocalizedUrl(`apps/invoice/edit/${row.original.id}`, locale as Locale),
+                  href: `apps/invoice/edit/${row.original.id}`,
                   linkProps: {
                     className: 'flex items-center is-full plb-2 pli-4 gap-2 text-textSecondary'
                   }
@@ -318,7 +309,7 @@ const InvoiceListTable = ({ invoiceData }: { invoiceData: InvoiceType[] }) => {
             variant='contained'
             component={Link}
             startIcon={<i className='tabler-plus' />}
-            href={getLocalizedUrl('apps/invoice/add', locale as Locale)}
+            href={'apps/invoice/add'}
             className='max-sm:is-full'
           >
             Create Invoice

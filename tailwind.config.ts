@@ -11,7 +11,11 @@ const config: Config = {
   important: '#__next',
   plugins: [tailwindcssLogical, tailwindPlugin],
   theme: {
-    extend: {}
+    extend: {
+      colors: {
+        primary: '#9188F3'
+      }
+    }
   }
 }
 

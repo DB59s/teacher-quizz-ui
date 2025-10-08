@@ -5,18 +5,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
 
     // Validate required fields
-    const { email, full_name, student_code, password } = body
-
-    if (!email || !full_name || !student_code || !password) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
-    }
+    const { email, full_name, password, department } = body
 
     const payload = {
       email,
       full_name,
-      student_code,
       password,
-      role: 'student'
+      department,
+      role: 'teacher'
     }
 
     const response = await fetch(`${process.env.API_URL}/api/v1/auth/register`, {
