@@ -43,8 +43,8 @@ import { useSettings } from '@core/hooks/useSettings'
 type FormValues = {
   email: string
   password: string
-  fullName: string
-  phone: string
+  full_name: string
+  phone_number: string
   department: string
 }
 
@@ -112,9 +112,9 @@ const Register = ({ mode }: { mode: SystemMode }) => {
   } = useForm<FormValues>({
     defaultValues: {
       email: '',
-      fullName: '',
+      full_name: '',
       password: '',
-      phone: '',
+      phone_number: '',
       department: ''
     },
     mode: 'onBlur'
@@ -126,9 +126,9 @@ const Register = ({ mode }: { mode: SystemMode }) => {
 
     const payload = {
       email: data.email,
-      full_name: data.fullName,
+      full_name: data.full_name,
       password: data.password,
-      phone: data.phone,
+      phone_number: data.phone_number,
       department: data.department
     }
 
@@ -211,7 +211,7 @@ const Register = ({ mode }: { mode: SystemMode }) => {
               <Grid size={{ xs: 12 }}>
                 <CustomInputLabel>Họ và tên</CustomInputLabel>
                 <Controller
-                  name='fullName'
+                  name='full_name'
                   control={control}
                   rules={{
                     validate: value => {
@@ -226,9 +226,9 @@ const Register = ({ mode }: { mode: SystemMode }) => {
                       required
                       placeholder='Nhập họ và tên'
                       {...field}
-                      {...(errors.fullName && {
+                      {...(errors.full_name && {
                         error: true,
-                        helperText: errors.fullName.message
+                        helperText: errors.full_name.message
                       })}
                     />
                   )}
@@ -268,7 +268,7 @@ const Register = ({ mode }: { mode: SystemMode }) => {
               <Grid size={{ xs: 6 }}>
                 <CustomInputLabel>Số điện thoại</CustomInputLabel>
                 <Controller
-                  name='phone'
+                  name='phone_number'
                   control={control}
                   rules={{
                     validate: value => {
@@ -286,9 +286,9 @@ const Register = ({ mode }: { mode: SystemMode }) => {
                       onChange={e => {
                         field.onChange(e.target.value)
                       }}
-                      {...(errors.phone && {
+                      {...(errors.phone_number && {
                         error: true,
-                        helperText: errors.phone.message
+                        helperText: errors.phone_number.message
                       })}
                     />
                   )}

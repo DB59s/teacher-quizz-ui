@@ -1,8 +1,8 @@
 'use client'
 
 // React Imports
+import React, { useCallback, useState, useEffect } from 'react'
 import type { SyntheticEvent } from 'react'
-import { useCallback, useState } from 'react'
 
 import { useRouter, useSearchParams } from 'next/navigation'
 
@@ -13,59 +13,70 @@ import Tab from '@mui/material/Tab'
 import TabContext from '@mui/lab/TabContext'
 import TabPanel from '@mui/lab/TabPanel'
 
+import { fetchApi } from '@/libs/fetchApi'
+
 // Component Imports
 import CustomTabList from '@core/components/mui/TabList'
-
 import Newsfeed from '@views/class/Tab/Newsfeed'
 import Members from '@views/class/Tab/Members'
 import Exercises from '@views/class/Tab/Exercises'
+import PageLoading from '@/theme/PageLoading'
 
-const data = {
-  name: 'DATN 2024',
-  description: 'Đồ án tốt nghiệp 2024',
-  banner: 'https://www.gstatic.com/classroom/themes/img_backtoschool.jpg',
-  teacher: 'Nguyễn Văn A',
-  class_code: 'epb2g6rj',
-  students: [
-    {
-      id: 1,
-      name: 'Trần Văn B',
-      email: 'tranvan.b@example.com',
-      student_code: 'sv2024001'
-    },
-    {
-      id: 2,
-      name: 'Lê Văn C',
-      email: 'levanc@example.com',
-      student_code: 'sv2024002'
-    },
-    {
-      id: 3,
-      name: 'Phạm Văn D',
-      email: 'phamvan.d@example.com',
-      student_code: 'sv2024003'
-    }
-  ]
-}
-
-export default function ClassPage() {
+export default function ClassPage({ params }: { params: Promise<{ classId: string }> }) {
   const [activeTab, setActiveTab] = useState('newsfeed')
+  const [data, setData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string>('')
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  // Unwrap params using React.use()
+  const unwrappedParams = React.use(params)
+  const classId = unwrappedParams.classId
+
+  useEffect(() => {
+    let isMounted = true
+
+    setLoading(true)
+    fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/classes/details/${classId}`, { method: 'GET' })
+      .then(res => {
+        if (!res.ok) throw new Error('Không lấy được thông tin lớp học')
+
+        return res.json()
+      })
+      .then(json => {
+        if (isMounted) setData(json?.data || null)
+      })
+      .catch(err => {
+        if (isMounted) setError(err.message || 'Lỗi không xác định')
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [classId])
 
   const handleChange = useCallback(
     (event: SyntheticEvent, value: string) => {
       setActiveTab(value)
+      const paramsUrl = new URLSearchParams(searchParams.toString())
 
-      const params = new URLSearchParams(searchParams.toString())
-
-      params.set('tab', value)
-      router.replace(`?${params.toString()}`)
+      paramsUrl.set('tab', value)
+      router.replace(`?${paramsUrl.toString()}`)
     },
     [router, searchParams]
   )
 
+  if (loading) return <PageLoading show={loading} />
+  if (error) return <Typography color='error'>{error}</Typography>
+  if (!data) return <Typography color='error'>Không có dữ liệu lớp học</Typography>
+
   return (
+    <>
+      <PageLoading show={loading} />
     <Grid container spacing={6}>
       <Grid size={{ xs: 12 }}>
         <Typography variant='h4' className='font-semibold'>
@@ -79,7 +90,6 @@ export default function ClassPage() {
             <Tab label={<div className='flex items-center gap-1.5'>Bài tập trên lớp</div>} value='exercises' />
             <Tab label={<div className='flex items-center gap-1.5'>Mọi người</div>} value='members' />
           </CustomTabList>
-
           <TabPanel value={'newsfeed'} className='p-0'>
             <Newsfeed data={data} />
           </TabPanel>
@@ -92,5 +102,6 @@ export default function ClassPage() {
         </TabContext>
       </Grid>
     </Grid>
+    </>
   )
 }

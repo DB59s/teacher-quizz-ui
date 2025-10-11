@@ -1,4 +1,3 @@
-// Next Imports
 // import { useParams } from 'next/navigation'
 
 // MUI Imports
@@ -13,8 +12,6 @@ import type { VerticalMenuContextProps } from '@menu/components/vertical-menu/Me
 // Component Imports
 import { Menu, SubMenu, MenuItem } from '@menu/vertical-menu'
 
-import CustomChip from '@core/components/mui/Chip'
-
 // import { GenerateVerticalMenu } from '@components/GenerateMenu'
 
 // Hook Imports
@@ -26,6 +23,7 @@ import StyledVerticalNavExpandIcon from '@menu/styles/vertical/StyledVerticalNav
 // Style Imports
 import menuItemStyles from '@core/styles/vertical/menuItemStyles'
 import menuSectionStyles from '@core/styles/vertical/menuSectionStyles'
+import useClass from '@/hooks/useClass'
 
 // Menu Data Imports
 // import menuData from '@/data/navigation/verticalMenuData'
@@ -54,9 +52,7 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
 
   // Vars
   const { isBreakpointReached, transitionDuration } = verticalNavOptions
-
-  //
-
+  const { classes } = useClass()
   const ScrollWrapper = isBreakpointReached ? 'div' : PerfectScrollbar
 
   return (
@@ -83,30 +79,28 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
         menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
       >
         <SubMenu label='Danh sách lớp học' icon={<i className='tabler-smart-home' />}>
-          <MenuItem href='/class/datn2024' activeUrl='/class/datn2024' exactMatch={false}>
-            DATN2024
-          </MenuItem>
-          <MenuItem href='/class/datn2025' activeUrl='/class/datn2025' exactMatch={false}>
-            DATN2025
-          </MenuItem>
+          {classes.map(item => (
+            <MenuItem
+              key={item._id}
+              href={`/class/${item._id}`}
+              activeUrl={`/class/${item._id}`}
+              exactMatch={false}
+            >
+              {item.name}
+            </MenuItem>
+          ))}
         </SubMenu>
-        <MenuItem href='#' activeUrl='#' icon={<i className='tabler-file-description' />} exactMatch={false}>
+        <MenuItem
+          href='/question'
+          activeUrl='/question'
+          icon={<i className='tabler-file-description' />}
+          exactMatch={false}
+        >
           Ngân hàng câu hỏi
         </MenuItem>
-        <MenuItem href='#' activeUrl='#' icon={<i className='tabler-user-circle' />} exactMatch={false}>
+        <MenuItem href='/profile' activeUrl='/profile' icon={<i className='tabler-user-circle' />} exactMatch={false}>
           Hồ sơ
         </MenuItem>
-        <SubMenu
-          label='dashboards'
-          icon={<i className='tabler-smart-home' />}
-          suffix={<CustomChip label='5' size='small' color='error' round='true' />}
-        >
-          <MenuItem href='/dashboards/crm'>crm</MenuItem>
-          <MenuItem href='/dashboards/analytics'>analytics</MenuItem>
-          <MenuItem href='/dashboards/ecommerce'>eCommerce</MenuItem>
-          <MenuItem href='/dashboards/academy'>academy</MenuItem>
-          <MenuItem href='/dashboards/logistics'>logistics</MenuItem>
-        </SubMenu>
         {/* <SubMenu label='frontPages' icon={<i className='tabler-files' />}>
           <MenuItem href='/front-pages/landing-page' target='_blank'>
             landing

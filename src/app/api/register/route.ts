@@ -5,13 +5,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
 
     // Validate required fields
-    const { email, full_name, password, department } = body
+    const { email, full_name, password, department, phone_number } = body
 
     const payload = {
       email,
       full_name,
       password,
       department,
+      phone_number,
       role: 'teacher'
     }
 

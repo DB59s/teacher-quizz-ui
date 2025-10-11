@@ -28,11 +28,13 @@ import { Add } from 'iconsax-react'
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
 import ModalCreateClass from '@/components/modal/ModalCreateClass'
+import ModalCreateQuestion from '@/components/modal/ModalCreateQuestion'
 
 const CreateItemDropdown = () => {
   // States
   const [open, setOpen] = useState(false)
   const [isModalCreateClassOpen, setIsModalCreateClassOpen] = useState(false)
+  const [isModalCreateQuestionOpen, setIsModalCreateQuestionOpen] = useState(false)
 
   // Refs
   const anchorRef = useRef<HTMLButtonElement>(null)
@@ -83,10 +85,24 @@ const CreateItemDropdown = () => {
             <Paper className={settings.skin === 'bordered' ? 'border shadow-none' : 'shadow-lg'}>
               <ClickAwayListener onClickAway={handleClose}>
                 <MenuList onKeyDown={handleClose}>
-                  <MenuItem component={Link} href='#' onClick={() => {setIsModalCreateClassOpen(true); handleClose()}}>
+                  <MenuItem
+                    component={Link}
+                    href='#'
+                    onClick={() => {
+                      setIsModalCreateClassOpen(true)
+                      handleClose();
+                      }}
+                  >
                     Tạo mới lớp học
                   </MenuItem>
-                  <MenuItem component={Link} href='#' onClick={handleClose}>
+                  <MenuItem
+                    component={Link}
+                    href='#'
+                    onClick={() => {
+                      setIsModalCreateQuestionOpen(true)
+                      handleClose()
+                    }}
+                  >
                     Tạo mới câu hỏi
                   </MenuItem>
                 </MenuList>
@@ -96,6 +112,7 @@ const CreateItemDropdown = () => {
         )}
       </Popper>
       <ModalCreateClass open={isModalCreateClassOpen} setOpen={setIsModalCreateClassOpen} />
+      <ModalCreateQuestion type='create' open={isModalCreateQuestionOpen} setOpen={setIsModalCreateQuestionOpen} />
     </>
   )
 }
