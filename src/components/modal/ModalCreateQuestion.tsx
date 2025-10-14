@@ -18,6 +18,8 @@ type ModalCreateQuestionProps = {
 // React Imports
 import { useEffect, useState } from 'react'
 
+import { useRouter, usePathname } from 'next/navigation'
+
 // MUI Imports
 import Dialog from '@mui/material/Dialog'
 import DialogContent from '@mui/material/DialogContent'
@@ -54,10 +56,13 @@ export default function ModalCreateQuestion({ type, open, setOpen }: ModalCreate
       answers: [{ content: '', is_true: false }]
     }
   })
-  
+
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([])
   const [loadingSubjects, setLoadingSubjects] = useState(false)
   const [errorSubjects, setErrorSubjects] = useState('')
+  const router = useRouter()
+  const pathname = usePathname()
+  const isQuestionPath = /question/.test(pathname || '')
 
   useEffect(() => {
     setLoadingSubjects(true)
@@ -84,7 +89,7 @@ export default function ModalCreateQuestion({ type, open, setOpen }: ModalCreate
   })
 
   const onSubmit = async (values: CreateQuestionFormValues) => {
-    console.log(values)
+    setOpen(false)
 
     try {
       const response = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/questions`, {
@@ -95,7 +100,12 @@ export default function ModalCreateQuestion({ type, open, setOpen }: ModalCreate
       if (!response.ok) throw new Error('Tạo câu hỏi thất bại')
       toast.success('Tạo câu hỏi thành công!', { position: 'bottom-right', autoClose: 5000 })
       reset()
-      setOpen(false)
+
+      if (isQuestionPath) {
+        window.dispatchEvent(new CustomEvent('refreshQuestions'))
+      } else {
+        router.push('/question')
+      }
     } catch (error) {
       toast.error('Có lỗi xảy ra khi tạo câu hỏi')
       console.error(error)
@@ -103,7 +113,15 @@ export default function ModalCreateQuestion({ type, open, setOpen }: ModalCreate
   }
 
   return (
-    <Dialog open={open} sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}>
+    <Dialog
+      open={open}
+      maxWidth='sm'
+      sx={{
+        '& .MuiDialog-paper': {
+          overflow: 'visible'
+        }
+      }}
+    >
       <DialogCloseButton onClick={() => setOpen(false)} disableRipple>
         <i className='tabler-x' />
       </DialogCloseButton>
@@ -111,7 +129,13 @@ export default function ModalCreateQuestion({ type, open, setOpen }: ModalCreate
         {type === 'create' ? 'Tạo câu hỏi mới' : 'Chỉnh sửa câu hỏi'}
       </DialogTitle>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <DialogContent className='overflow-visible'>
+        <DialogContent
+          sx={{
+            overflowY: 'auto',
+            overflowX: 'visible',
+            maxHeight: '60vh'
+          }}
+        >
           <Grid container spacing={6}>
             <Grid size={{ xs: 12 }} className='flex flex-col'>
               <CustomInputLabel required>Nội dung câu hỏi</CustomInputLabel>
@@ -245,23 +269,23 @@ export default function ModalCreateQuestion({ type, open, setOpen }: ModalCreate
               </Button>
             </Grid>
           </Grid>
+          <DialogActions className='justify-center'>
+            <Button variant='contained' type='submit'>
+              {type === 'create' ? 'Tạo' : 'Lưu'}
+            </Button>
+            <Button
+              variant='tonal'
+              type='reset'
+              color='secondary'
+              onClick={() => {
+                reset()
+                setOpen(false)
+              }}
+            >
+              Huỷ
+            </Button>
+          </DialogActions>
         </DialogContent>
-        <DialogActions className='justify-center'>
-          <Button variant='contained' type='submit'>
-            {type === 'create' ? 'Tạo' : 'Lưu'}
-          </Button>
-          <Button
-            variant='tonal'
-            type='reset'
-            color='secondary'
-            onClick={() => {
-              reset()
-              setOpen(false)
-            }}
-          >
-            Huỷ
-          </Button>
-        </DialogActions>
       </form>
     </Dialog>
   )

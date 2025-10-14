@@ -77,31 +77,31 @@ export default function ClassPage({ params }: { params: Promise<{ classId: strin
   return (
     <>
       <PageLoading show={loading} />
-    <Grid container spacing={6}>
-      <Grid size={{ xs: 12 }}>
-        <Typography variant='h4' className='font-semibold'>
-          Lớp học {data.name}
-        </Typography>
+      <Grid container spacing={6}>
+        <Grid size={{ xs: 12 }}>
+          <Typography variant='h4' className='font-semibold'>
+            Lớp học {data.name}
+          </Typography>
+        </Grid>
+        <Grid size={{ xs: 12 }} className='flex flex-col gap-6'>
+          <TabContext value={activeTab}>
+            <CustomTabList onChange={handleChange} variant='scrollable' pill='true'>
+              <Tab label={<div className='flex items-center gap-1.5'>Bảng tin</div>} value='newsfeed' />
+              <Tab label={<div className='flex items-center gap-1.5'>Bài tập trên lớp</div>} value='exercises' />
+              <Tab label={<div className='flex items-center gap-1.5'>Mọi người</div>} value='members' />
+            </CustomTabList>
+            <TabPanel value={'newsfeed'} className='p-0'>
+              <Newsfeed data={data} />
+            </TabPanel>
+            <TabPanel value={'exercises'} className='p-0'>
+              <Exercises />
+            </TabPanel>
+            <TabPanel value={'members'} className='p-0'>
+              <Members data={data} />
+            </TabPanel>
+          </TabContext>
+        </Grid>
       </Grid>
-      <Grid size={{ xs: 12 }} className='flex flex-col gap-6'>
-        <TabContext value={activeTab}>
-          <CustomTabList onChange={handleChange} variant='scrollable' pill='true'>
-            <Tab label={<div className='flex items-center gap-1.5'>Bảng tin</div>} value='newsfeed' />
-            <Tab label={<div className='flex items-center gap-1.5'>Bài tập trên lớp</div>} value='exercises' />
-            <Tab label={<div className='flex items-center gap-1.5'>Mọi người</div>} value='members' />
-          </CustomTabList>
-          <TabPanel value={'newsfeed'} className='p-0'>
-            <Newsfeed data={data} />
-          </TabPanel>
-          <TabPanel value={'exercises'} className='p-0'>
-            <Exercises />
-          </TabPanel>
-          <TabPanel value={'members'} className='p-0'>
-            <Members data={data} />
-          </TabPanel>
-        </TabContext>
-      </Grid>
-    </Grid>
     </>
   )
 }

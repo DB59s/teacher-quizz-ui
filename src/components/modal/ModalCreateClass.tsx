@@ -16,7 +16,6 @@ import CustomTextField from '@/@core/components/mui/TextField'
 import CustomInputLabel from '../form/CustomInputLabel'
 import { fetchApi } from '@/libs/fetchApi'
 
-
 type CreateClassFormValues = {
   name: string
   description: string
@@ -48,6 +47,8 @@ export default function ModalCreateClass({ open, setOpen }: ModalCreateClassProp
       max_students: Number(values.max_students)
     }
 
+    setOpen(false)
+
     try {
       const response = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/classes`, {
         method: 'POST',
@@ -58,6 +59,7 @@ export default function ModalCreateClass({ open, setOpen }: ModalCreateClassProp
         throw new Error('Failed to create class')
       }
 
+      reset()
       toast.success('Tạo lớp học thành công!', {
         position: 'bottom-right',
         autoClose: 5000,
@@ -65,19 +67,21 @@ export default function ModalCreateClass({ open, setOpen }: ModalCreateClassProp
         closeOnClick: true,
         pauseOnHover: true
       })
-
-      const data = await response.json()
-
-      console.log(data)
-      reset()
-      setOpen(false)
     } catch (error) {
       console.error(error)
     }
   }
 
   return (
-    <Dialog open={open} sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}>
+    <Dialog
+      open={open}
+      maxWidth='sm'
+      sx={{
+        '& .MuiDialog-paper': {
+          overflow: 'visible'
+        }
+      }}
+    >
       <DialogCloseButton onClick={() => setOpen(false)} disableRipple>
         <i className='tabler-x' />
       </DialogCloseButton>
@@ -87,7 +91,13 @@ export default function ModalCreateClass({ open, setOpen }: ModalCreateClassProp
       </DialogTitle>
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        <DialogContent className='overflow-visible'>
+        <DialogContent
+          sx={{
+            overflowY: 'auto',
+            overflowX: 'visible',
+            maxHeight: '60vh'
+          }}
+        >
           <Grid container spacing={6}>
             <Grid size={{ xs: 12 }} className='flex flex-col'>
               <CustomInputLabel required>Tên lớp học</CustomInputLabel>
@@ -142,23 +152,23 @@ export default function ModalCreateClass({ open, setOpen }: ModalCreateClassProp
               />
             </Grid>
           </Grid>
+          <DialogActions className='justify-center'>
+            <Button variant='contained' type='submit'>
+              Tạo
+            </Button>
+            <Button
+              variant='tonal'
+              type='reset'
+              color='secondary'
+              onClick={() => {
+                reset()
+                setOpen(false)
+              }}
+            >
+              Huỷ
+            </Button>
+          </DialogActions>
         </DialogContent>
-        <DialogActions className='justify-center'>
-          <Button variant='contained' type='submit'>
-            Tạo
-          </Button>
-          <Button
-            variant='tonal'
-            type='reset'
-            color='secondary'
-            onClick={() => {
-              reset()
-              setOpen(false)
-            }}
-          >
-            Huỷ
-          </Button>
-        </DialogActions>
       </form>
     </Dialog>
   )

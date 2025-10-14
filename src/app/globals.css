@@ -131,3 +131,30 @@ code {
   background-color: rgb(var(--mui-palette-info-mainChannel) / 0.08);
   border: 0;
 }
+
+/* RC Pagination Styles */
+.rc-pagination {
+  @apply flex justify-center gap-[6px];
+}
+
+.rc-pagination-item,
+.rc-pagination-jump-prev,
+.rc-pagination-jump-next,
+.rc-pagination-prev,
+.rc-pagination-next {
+  @apply flex h-[38px] w-[38px] !cursor-pointer items-center justify-center rounded-lg p-0 text-[13px] hover:!cursor-pointer hover:border-transparent hover:bg-[#FFA21A29] bg-gray-100;
+}
+
+.rc-pagination-item-active {
+  @apply bg-primary font-semibold text-white;
+}
+
+.rc-pagination-disabled,
+.rc-pagination-disabled:hover {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+}
+
+.rc-pagination-options {
+  @apply list-none;
+}

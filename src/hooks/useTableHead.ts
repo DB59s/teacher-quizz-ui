@@ -8,6 +8,7 @@ const useTableHead = () => {
 
   const TABLE_HEAD = useCallback(() => {
     const isQuestionPath = /question/.test(pathname || '')
+    const isQuizzPath = /quizz/.test(pathname || '')
 
     if (isQuestionPath) {
       return [
@@ -28,20 +29,13 @@ const useTableHead = () => {
           position: 'center',
           sortable: false,
           field: 'content',
-          maxWidth: 160
+          maxWidth: 360
         },
         {
           name: 'Độ khó',
           position: 'center',
           sortable: false,
           field: 'level'
-        },
-        {
-          name: 'Môn học',
-          position: 'left',
-          sortable: false,
-          field: 'subject',
-          maxWidth: 160
         },
         {
           name: 'Ngày tạo',
@@ -57,6 +51,54 @@ const useTableHead = () => {
         }
       ]
     }
+
+    if (isQuizzPath) {
+      return [
+        {
+          name: '#',
+          position: 'center',
+          sortable: false,
+          field: 'index'
+        },
+        {
+          name: 'Hành động',
+          position: 'center',
+          sortable: false,
+          field: 'actions',
+        },
+        {
+          name: 'Nội dung',
+          position: 'center',
+          sortable: false,
+          field: 'name',
+        },
+        {
+          name: 'Số câu hỏi',
+          position: 'center',
+          sortable: false,
+          field: 'questionCount'
+        },
+        {
+          name: 'Thời gian làm bài',
+          position: 'center',
+          sortable: false,
+          field: 'duration'
+        },
+        {
+          name: 'Ngày tạo',
+          position: 'center',
+          sortable: false,
+          field: 'createdAt'
+        },
+        {
+          name: 'Ngày cập nhật',
+          position: 'center',
+          sortable: false,
+          field: 'updatedAt'
+        }
+      ]
+    }
+
   }, [pathname])
 
   return TABLE_HEAD
