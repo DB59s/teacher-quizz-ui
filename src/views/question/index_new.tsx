@@ -1,9 +1,7 @@
 'use client'
 
 import type { ChangeEvent } from 'react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
-
-import { useSearchParams } from 'next/navigation'
+import { useCallback, useEffect, useState } from 'react'
 
 import Grid from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
@@ -24,31 +22,37 @@ import PageLoading from '@/theme/PageLoading'
 import CustomTextField from '@/@core/components/mui/TextField'
 import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
 
+type Props = {
+  searchParams: {
+    status?: string
+    search?: string
+    page?: string
+    limit?: string
+    inStock?: string
+  }
+}
+
 type PaginationData = {
   page: number
   limit: number
   totalItems: number
 } | null
 
-export default function QuestionView() {
+export default function QuestionView({ searchParams }: Props) {
   const TABLE_HEAD = useTableHead()
   const [loading, setLoading] = useState(false)
   const [questionData, setQuestionData] = useState<any[]>([])
-  const { updateQueryParams } = useQueryParams()
+  const { queryParams, updateQueryParams } = useQueryParams()
   const [paginationData, setPaginationData] = useState<PaginationData>(null)
-  const searchParams = useSearchParams()
 
-  // Lấy search params từ URL thực tế
-  const currentSearchParams = useMemo(
-    () => ({
-      status: searchParams.get('status') || '',
-      search: searchParams.get('search') || '',
-      page: searchParams.get('page') || '1',
-      limit: searchParams.get('limit') || '10',
-      inStock: searchParams.get('inStock') || ''
-    }),
-    [searchParams]
-  )
+  // Sử dụng queryParams từ hook để có real-time data
+  const currentSearchParams = {
+    status: (queryParams.status as string) || searchParams?.status || '',
+    search: (queryParams.search as string) || searchParams?.search || '',
+    page: (queryParams.page as string) || searchParams?.page || '1',
+    limit: (queryParams.limit as string) || searchParams?.limit || '10',
+    inStock: (queryParams.inStock as string) || searchParams?.inStock || ''
+  }
 
   const [searchTerm, setSearchTerm] = useState<string>(currentSearchParams.search || '')
 
@@ -67,6 +71,8 @@ export default function QuestionView() {
       // Tạo URL với query parameters
       const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/questions${queryString.toString() ? `?${queryString.toString()}` : ''}`
 
+      console.log('API URL với query params:', apiUrl) // Debug log
+
       const questionsRes = await fetchApi(apiUrl, { method: 'GET' })
 
       if (!questionsRes.ok) {
@@ -78,8 +84,7 @@ export default function QuestionView() {
 
       setQuestionData(questionsData?.data || [])
 
-      // Đảm bảo pagination data có page từ searchParams
-
+      // Đảm bảo pagination data có page từ currentSearchParams
       const paginationWithCorrectPage = {
         ...questionsData?.pagination,
         page: parseInt(currentSearchParams.page || '1'),
@@ -92,22 +97,11 @@ export default function QuestionView() {
     } finally {
       setLoading(false)
     }
-  }, [
-    currentSearchParams.search,
-    currentSearchParams.status,
-    currentSearchParams.page,
-    currentSearchParams.limit,
-    currentSearchParams.inStock
-  ])
+  }, [currentSearchParams.search, currentSearchParams.status, currentSearchParams.page, currentSearchParams.limit, currentSearchParams.inStock])
 
   useEffect(() => {
     fetchQuestions()
   }, [fetchQuestions])
-
-  // Debug effect để kiểm tra searchParams
-  useEffect(() => {
-    console.log('SearchParams changed:', currentSearchParams)
-  }, [currentSearchParams])
 
   // Lắng nghe custom event để refresh khi tạo câu hỏi thành công
   useEffect(() => {
@@ -121,6 +115,12 @@ export default function QuestionView() {
       window.removeEventListener('refreshQuestions', handleRefreshQuestions)
     }
   }, [fetchQuestions])
+
+  // Debug effect để kiểm tra queryParams
+  useEffect(() => {
+    console.log('QueryParams changed:', queryParams)
+    console.log('Current SearchParams:', currentSearchParams)
+  }, [queryParams, currentSearchParams])
 
   const handleDeleteQuestion = (id: string) => async () => {
     if (!id) return
@@ -261,7 +261,10 @@ export default function QuestionView() {
             </table>
           </div>
           {paginationData && (
-            <TableRCPaginationCustom pagination={paginationData} onChangePage={page => handlePageChange(page)} />
+            <TableRCPaginationCustom 
+              pagination={paginationData} 
+              onChangePage={page => handlePageChange(page)} 
+            />
           )}
         </Card>
       </Grid>

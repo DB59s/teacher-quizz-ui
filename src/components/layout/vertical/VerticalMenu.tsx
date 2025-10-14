@@ -98,6 +98,14 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
         >
           Ngân hàng câu hỏi
         </MenuItem>
+        <MenuItem
+          href='/quizz'
+          activeUrl='/quizz'
+          icon={<i className='tabler-puzzle' />}
+          exactMatch={false}
+        >
+          Danh sách quizz
+        </MenuItem>
         <MenuItem href='/profile' activeUrl='/profile' icon={<i className='tabler-user-circle' />} exactMatch={false}>
           Hồ sơ
         </MenuItem>

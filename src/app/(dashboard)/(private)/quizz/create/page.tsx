@@ -1,19 +1,19 @@
 import Grid from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
 
-import Profile from '@/views/profile'
+import CreateQuizzForm from '@/views/quizz/CreateQuizzForm'
 
-export default function ProfilePage() {
+export default function CreateQuizzPage() {
   return (
     <Grid container spacing={6}>
       <Grid size={{ xs: 12 }}>
         <Typography variant='h4' className='font-semibold'>
-          Quản lý hồ sơ
+          Tạo mới quizz
         </Typography>
       </Grid>
       <Grid size={{ xs: 12 }}>
-        <Profile />
-      </Grid>
+          <CreateQuizzForm />
+        </Grid>
     </Grid>
   )
 }
