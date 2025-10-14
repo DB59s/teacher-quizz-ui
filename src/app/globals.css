@@ -142,7 +142,7 @@ code {
 .rc-pagination-jump-next,
 .rc-pagination-prev,
 .rc-pagination-next {
-  @apply flex h-[38px] w-[38px] !cursor-pointer items-center justify-center rounded-lg p-0 text-[13px] hover:!cursor-pointer hover:border-transparent hover:bg-[#FFA21A29] bg-gray-100;
+  @apply flex h-[38px] w-[38px] !cursor-pointer items-center justify-center rounded-lg p-0 text-[13px] hover:!cursor-pointer hover:border-transparent hover:bg-gray-300 bg-gray-100;
 }
 
 .rc-pagination-item-active {
