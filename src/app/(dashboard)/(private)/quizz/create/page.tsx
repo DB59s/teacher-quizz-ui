@@ -12,7 +12,7 @@ export default function CreateQuizzPage() {
         </Typography>
       </Grid>
       <Grid size={{ xs: 12 }}>
-          <CreateQuizzForm type={'create'} />
+          <CreateQuizzForm />
         </Grid>
     </Grid>
   )
