@@ -14,10 +14,7 @@ import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
 import Grid from '@mui/material/Grid2'
 import InputAdornment from '@mui/material/InputAdornment'
-import Checkbox from '@mui/material/Checkbox'
 import Button from '@mui/material/Button'
-import FormControlLabel from '@mui/material/FormControlLabel'
-import Divider from '@mui/material/Divider'
 
 // Third-party Imports
 import classnames from 'classnames'
@@ -46,6 +43,8 @@ type FormValues = {
   full_name: string
   phone_number: string
   department: string
+  university: string
+  agree_to_terms: boolean
 }
 
 // Styled Custom Components
@@ -115,7 +114,9 @@ const Register = ({ mode }: { mode: SystemMode }) => {
       full_name: '',
       password: '',
       phone_number: '',
-      department: ''
+      department: '',
+      university: '',
+      agree_to_terms: false
     },
     mode: 'onBlur'
   })
@@ -129,7 +130,8 @@ const Register = ({ mode }: { mode: SystemMode }) => {
       full_name: data.full_name,
       password: data.password,
       phone_number: data.phone_number,
-      department: data.department
+      department: data.department,
+      university: data.university
     }
 
     try {
@@ -203,8 +205,7 @@ const Register = ({ mode }: { mode: SystemMode }) => {
         </Link>
         <div className='flex flex-col gap-6 is-full sm:is-auto md:is-full sm:max-is-[400px] md:max-is-[unset] mbs-8 sm:mbs-11 md:mbs-0'>
           <div className='flex flex-col gap-1'>
-            <Typography variant='h4'>Adventure starts here 🚀</Typography>
-            <Typography>Make your app management easy and fun!</Typography>
+            <Typography variant='h4'>Tạo tài khoản</Typography>
           </div>
           <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)} className='flex flex-col'>
             <Grid container spacing={3}>
@@ -364,40 +365,35 @@ const Register = ({ mode }: { mode: SystemMode }) => {
                   )}
                 />
               </Grid>
-              <FormControlLabel
-                control={<Checkbox />}
-                label={
-                  <>
-                    <span>I agree to </span>
-                    <Link className='text-primary' href='/' onClick={e => e.preventDefault()}>
-                      privacy policy & terms
-                    </Link>
-                  </>
-                }
-              />
+
+              <Grid size={{ xs: 12 }}>
+                <CustomInputLabel>Trường</CustomInputLabel>
+                <Controller
+                  name='university'
+                  control={control}
+                  render={({ field }) => (
+                    <CustomTextField
+                      fullWidth
+                      required
+                      placeholder='Nhập trường'
+                      {...field}
+                      onChange={e => {
+                        field.onChange(e.target.value)
+                      }}
+                    />
+                  )}
+                />
+              </Grid>
+              <span>Tôi đồng ý với <span className='text-primary'>chính sách bảo mật & điều khoản</span></span>
               <Button fullWidth variant='contained' type='submit' disabled={isLoading}>
                 {isLoading ? 'Signing Up...' : 'Sign Up'}
               </Button>
+              <div className='flex justify-'></div>
               <div className='flex justify-center items-center flex-wrap gap-2'>
-                <Typography>Already have an account?</Typography>
+                <Typography>Bạn đã có tài khoản?</Typography>
                 <Typography component={Link} href={'/login'} color='primary.main'>
-                  Sign in instead
+                  Đăng nhập
                 </Typography>
-              </div>
-              <Divider className='gap-2'>or</Divider>
-              <div className='flex justify-center items-center gap-1.5'>
-                <IconButton className='text-facebook' size='small'>
-                  <i className='tabler-brand-facebook-filled' />
-                </IconButton>
-                <IconButton className='text-twitter' size='small'>
-                  <i className='tabler-brand-twitter-filled' />
-                </IconButton>
-                <IconButton className='text-textPrimary' size='small'>
-                  <i className='tabler-brand-github-filled' />
-                </IconButton>
-                <IconButton className='text-error' size='small'>
-                  <i className='tabler-brand-google-filled' />
-                </IconButton>
               </div>
             </Grid>
           </form>

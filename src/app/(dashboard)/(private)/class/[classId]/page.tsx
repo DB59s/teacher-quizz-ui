@@ -59,6 +59,8 @@ export default function ClassPage({ params }: { params: Promise<{ classId: strin
     }
   }, [classId])
 
+  console.log('Class data:', data)
+
   const handleChange = useCallback(
     (event: SyntheticEvent, value: string) => {
       setActiveTab(value)
@@ -94,7 +96,7 @@ export default function ClassPage({ params }: { params: Promise<{ classId: strin
               <Newsfeed data={data} />
             </TabPanel>
             <TabPanel value={'exercises'} className='p-0'>
-              <Exercises />
+              <Exercises data={data}/>
             </TabPanel>
             <TabPanel value={'members'} className='p-0'>
               <Members data={data} />

@@ -19,7 +19,7 @@ export default function Newsfeed(data: any) {
             <Stack direction='row' justifyContent='space-between' alignItems='center' spacing={2}>
               <Box>
                 <Typography variant='h5' className='font-semibold'>
-                  Giáo viên: {teacher}
+                  Giáo viên: {teacher.full_name}
                 </Typography>
                 <Typography color='text.secondary' className='mt-1'>
                   {description}

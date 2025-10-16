@@ -14,6 +14,8 @@ import clsx from 'clsx'
 
 import { Edit2, Eye, Trash } from 'iconsax-react'
 
+import { Button } from '@mui/material'
+
 import { useQueryParams } from '@/hooks/useQueryParams'
 
 import useTableHead from '@/hooks/useTableHead'
@@ -23,6 +25,8 @@ import { fetchApi } from '@/libs/fetchApi'
 import PageLoading from '@/theme/PageLoading'
 import CustomTextField from '@/@core/components/mui/TextField'
 import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
+import ModalConfirmDeleteQuestion from '@/components/modal/ModalConfirmDeleteQuestion'
+import ModalCreateQuestion from '@/components/modal/ModalCreateQuestion'
 
 type PaginationData = {
   page: number
@@ -38,6 +42,14 @@ export default function QuestionView() {
   const [paginationData, setPaginationData] = useState<PaginationData>(null)
   const searchParams = useSearchParams()
 
+  const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([])
+  const [loadingSubjects, setLoadingSubjects] = useState(false)
+
+  // States for delete confirmation modal
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [questionToDelete, setQuestionToDelete] = useState<{ id: string; content: string } | null>(null)
+  const [isModalCreateQuestionOpen, setIsModalCreateQuestionOpen] = useState(false)
+
   // Lấy search params từ URL thực tế
   const currentSearchParams = useMemo(
     () => ({
@@ -45,7 +57,9 @@ export default function QuestionView() {
       search: searchParams.get('search') || '',
       page: searchParams.get('page') || '1',
       limit: searchParams.get('limit') || '10',
-      inStock: searchParams.get('inStock') || ''
+      inStock: searchParams.get('inStock') || '',
+      subject_id: searchParams.get('subject_id') || '',
+      level: searchParams.get('level') || ''
     }),
     [searchParams]
   )
@@ -63,6 +77,8 @@ export default function QuestionView() {
       if (currentSearchParams.page) queryString.append('page', currentSearchParams.page)
       if (currentSearchParams.limit) queryString.append('limit', currentSearchParams.limit)
       if (currentSearchParams.inStock) queryString.append('inStock', currentSearchParams.inStock)
+      if (currentSearchParams.subject_id) queryString.append('subject_id', currentSearchParams.subject_id)
+      if (currentSearchParams.level) queryString.append('level', currentSearchParams.level)
 
       // Tạo URL với query parameters
       const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/questions${queryString.toString() ? `?${queryString.toString()}` : ''}`
@@ -97,7 +113,9 @@ export default function QuestionView() {
     currentSearchParams.status,
     currentSearchParams.page,
     currentSearchParams.limit,
-    currentSearchParams.inStock
+    currentSearchParams.inStock,
+    currentSearchParams.subject_id,
+    currentSearchParams.level
   ])
 
   useEffect(() => {
@@ -122,22 +140,37 @@ export default function QuestionView() {
     }
   }, [fetchQuestions])
 
-  const handleDeleteQuestion = (id: string) => async () => {
-    if (!id) return
+  const handleDeleteQuestion = (id: string, content: string) => () => {
+    setQuestionToDelete({ id, content })
+    setShowDeleteDialog(true)
+  }
 
-    try {
-      const res = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/questions/${id}`, { method: 'DELETE' })
+  const handleDeleteSuccess = () => {
+    // Reset states
+    setQuestionToDelete(null)
+    setShowDeleteDialog(false)
 
-      if (!res.ok) throw new Error('Xoá câu hỏi thất bại')
-      await fetchQuestions()
-    } catch (error) {
-      console.error(error)
-    }
+    // Refresh questions list
+    fetchQuestions()
   }
 
   const handleLimitChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newLimit = e.target.value
     const newParams = { ...currentSearchParams, limit: newLimit, page: '1' }
+
+    updateQueryParams(newParams)
+  }
+
+  const handleSubjectChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const newSubjectId = e.target.value
+    const newParams = { ...currentSearchParams, subject_id: newSubjectId || undefined, page: '1' }
+
+    updateQueryParams(newParams)
+  }
+
+  const handleLevelChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const newLevel = e.target.value
+    const newParams = { ...currentSearchParams, level: newLevel || undefined, page: '1' }
 
     updateQueryParams(newParams)
   }
@@ -154,6 +187,25 @@ export default function QuestionView() {
     }
   }
 
+  useEffect(() => {
+    setLoadingSubjects(true)
+    fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/subjects?page=1&limit=100`, { method: 'GET' })
+      .then(res => {
+        if (!res.ok) throw new Error('Không lấy được danh sách môn học')
+
+        return res.json()
+      })
+      .then(json => {
+        setSubjects(json?.data || [])
+      })
+      .catch(err => {
+        console.error(err)
+      })
+      .finally(() => {
+        setLoadingSubjects(false)
+      })
+  }, [])
+
   const handlePageChange = (page: number) => {
     console.log('Page change to:', page) // Debug log
 
@@ -166,9 +218,14 @@ export default function QuestionView() {
     <Grid container spacing={6}>
       <PageLoading show={loading} />
       <Grid size={{ xs: 12 }}>
-        <Typography variant='h4' className='font-semibold'>
-          Danh sách câu hỏi
-        </Typography>
+        <div className='flex justify-between'>
+          <Typography variant='h4' className='font-semibold'>
+            Danh sách câu hỏi
+          </Typography>
+          <Button variant='contained' color='primary' onClick={() => setIsModalCreateQuestionOpen(true)}>
+            Thêm câu hỏi
+          </Button>
+        </div>
       </Grid>
 
       <Grid size={{ xs: 12 }}>
@@ -183,6 +240,54 @@ export default function QuestionView() {
                 placeholder='Tìm kiếm'
                 className='max-sm:is-full is-[260px] !bg-white'
               />
+              <CustomTextField
+                select
+                value={currentSearchParams?.subject_id || ''}
+                onChange={handleSubjectChange}
+                className='max-sm:is-full is-[200px] !bg-white'
+                disabled={loadingSubjects}
+                SelectProps={{
+                  displayEmpty: true,
+                  renderValue: (selected: unknown) => {
+                    if (!selected || selected === '') {
+                      return 'Tất cả môn học'
+                    }
+
+                    const selectedSubject = subjects.find(subject => subject.id === String(selected))
+
+                    return selectedSubject?.name || 'Tất cả môn học'
+                  }
+                }}
+              >
+                <MenuItem value=''>Tất cả môn học</MenuItem>
+                {subjects.map(subject => (
+                  <MenuItem key={subject.id} value={subject.id}>
+                    {subject.name}
+                  </MenuItem>
+                ))}
+              </CustomTextField>
+              <CustomTextField
+                select
+                value={currentSearchParams?.level || ''}
+                onChange={handleLevelChange}
+                className='max-sm:is-full is-[150px] !bg-white'
+                SelectProps={{
+                  displayEmpty: true,
+                  renderValue: (selected: unknown) => {
+                    if (!selected || selected === '') {
+                      return 'Tất cả độ khó'
+                    }
+
+                    return `Độ khó ${String(selected)}` || 'Tất cả độ khó'
+                  }
+                }}
+              >
+                <MenuItem value=''>Tất cả độ khó</MenuItem>
+                <MenuItem value='1'>1</MenuItem>
+                <MenuItem value='2'>2</MenuItem>
+                <MenuItem value='3'>3</MenuItem>
+                <MenuItem value='4'>4</MenuItem>
+              </CustomTextField>
             </div>
             <div className='flex flex-wrap items-center max-sm:flex-col gap-3'>
               <CustomTextField
@@ -235,7 +340,7 @@ export default function QuestionView() {
                             <Edit2 size={18} color='#000' />
                           </CustomIconButton>
 
-                          <CustomIconButton size='small' onClick={handleDeleteQuestion(item.id)}>
+                          <CustomIconButton size='small' onClick={handleDeleteQuestion(item.id, item.content)}>
                             <Trash size={18} color='#ED0909' />
                           </CustomIconButton>
                         </div>
@@ -265,6 +370,14 @@ export default function QuestionView() {
           )}
         </Card>
       </Grid>
+
+      <ModalConfirmDeleteQuestion
+        open={showDeleteDialog}
+        setOpen={setShowDeleteDialog}
+        question={questionToDelete}
+        onDeleteSuccess={handleDeleteSuccess}
+      />
+      <ModalCreateQuestion type='create' open={isModalCreateQuestionOpen} setOpen={setIsModalCreateQuestionOpen} />
     </Grid>
   )
 }
