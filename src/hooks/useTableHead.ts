@@ -9,6 +9,7 @@ const useTableHead = () => {
   const TABLE_HEAD = useCallback(() => {
     const isQuestionPath = /question/.test(pathname || '')
     const isQuizzPath = /quizz/.test(pathname || '')
+    const isClassPath = /class/.test(pathname || '')
 
     if (isQuestionPath) {
       return [
@@ -99,6 +100,44 @@ const useTableHead = () => {
       ]
     }
 
+    if (isClassPath) {
+      return [
+        {
+          name: '#',
+          position: 'center',
+          sortable: false,
+          field: 'index'
+        },
+        {
+          name: 'Họ và tên',
+          position: 'left',
+          sortable: false,
+          field: 'full_name',
+          minWidth: 200
+        },
+        {
+          name: 'Mã sinh viên',
+          position: 'center',
+          sortable: false,
+          field: 'student_code',
+          minWidth: 120
+        },
+        {
+          name: 'Email',
+          position: 'left',
+          sortable: false,
+          field: 'email',
+          minWidth: 200
+        },
+        {
+          name: 'Số điện thoại',
+          position: 'center',
+          sortable: false,
+          field: 'phone_number',
+          minWidth: 150
+        }
+      ]
+    }
   }, [pathname])
 
   return TABLE_HEAD

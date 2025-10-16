@@ -158,3 +158,17 @@ code {
 .rc-pagination-options {
   @apply list-none;
 }
+
+table thead tr th {
+  @apply border-b border-gray-200 relative;
+}
+table thead tr th:not(:first-child):before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 2px;
+  height: 14px;
+  background-color: #2f2b3d1f;
+  transform: translateY(-50%);
+}
