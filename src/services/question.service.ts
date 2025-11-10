@@ -65,6 +65,7 @@ export const getQuestionDetail = async (questionId: string): Promise<QuestionDet
     throw new Error('Failed to fetch question detail: Invalid response format')
   } catch (error: any) {
     console.error('Error fetching question detail:', error)
+    
     if (error.response) {
       console.error('Response status:', error.response.status)
       console.error('Response data:', error.response.data)

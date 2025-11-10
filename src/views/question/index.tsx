@@ -104,7 +104,6 @@ export default function QuestionView() {
       setQuestionData(questionsData?.data || [])
 
       // Đảm bảo pagination data có page từ searchParams
-
       const paginationWithCorrectPage = {
         ...questionsData?.pagination,
         page: parseInt(currentSearchParams.page || '1'),
@@ -394,6 +393,7 @@ export default function QuestionView() {
         open={isModalEditQuestionOpen}
         setOpen={open => {
           setIsModalEditQuestionOpen(open)
+          
           if (!open) {
             setSelectedEditQuestionId(null)
           }

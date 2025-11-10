@@ -109,6 +109,7 @@ export default function ModalCreateQuestion({ type, open, setOpen, questionId }:
     if (!questionId) return
 
     setLoadingQuestion(true)
+
     try {
       const res = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/questions/${questionId}`, {
         method: 'GET'

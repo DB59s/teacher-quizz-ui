@@ -20,8 +20,10 @@ export default function ApprovalMember(data: any) {
 
     try {
       const list = await getClassStudents(_id)
+
       // Lọc chỉ lấy học sinh có status là 'pending'
       const pendingStudents = list.filter((student: any) => student.status === 'pending')
+      
       setStudents(pendingStudents)
     } catch (error) {
       console.error(error)
@@ -38,6 +40,7 @@ export default function ApprovalMember(data: any) {
 
   const handleApprove = async (registrationId: string) => {
     setLoading(true)
+
     try {
       await approveStudent(registrationId)
       await fetchClassDetails()
@@ -50,6 +53,7 @@ export default function ApprovalMember(data: any) {
 
   const handleReject = async (registrationId: string) => {
     setLoading(true)
+
     try {
       await rejectStudent(registrationId)
       await fetchClassDetails()

@@ -69,10 +69,12 @@ const UserDropdown = () => {
     try {
       // Sign out from the app without redirect (NextAuth might use NEXTAUTH_URL from env)
       await signOut({ redirect: false })
+
       // Manually redirect to login page using current domain
       router.push('/login')
     } catch (error) {
       console.error(error)
+
       // Fallback: redirect to login even if signOut fails
       router.push('/login')
 

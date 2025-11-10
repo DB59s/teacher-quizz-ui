@@ -20,6 +20,7 @@ export default function Members(data: any) {
 
     try {
       const list = await getClassStudents(_id)
+      
       setStudents(list)
     } catch (error) {
       console.error(error)
@@ -36,6 +37,7 @@ export default function Members(data: any) {
 
   const handleRemove = async (registrationId: string) => {
     setLoading(true)
+
     try {
       await removeStudentFromClass(registrationId)
       await fetchClassDetails()
