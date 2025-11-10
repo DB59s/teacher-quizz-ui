@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 // Next Imports
 import Link from 'next/link'
@@ -19,7 +19,7 @@ import FormControlLabel from '@mui/material/FormControlLabel'
 import Divider from '@mui/material/Divider'
 
 // Third-party Imports
-import { signIn } from 'next-auth/react'
+import { signIn, useSession } from 'next-auth/react'
 import { Controller, useForm } from 'react-hook-form'
 import { valibotResolver } from '@hookform/resolvers/valibot'
 import { email, object, minLength, string, pipe, nonEmpty } from 'valibot'
@@ -93,11 +93,19 @@ const Login = ({ mode }: { mode: SystemMode }) => {
   // Hooks
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { data: session, status } = useSession()
 
   const { settings } = useSettings()
   const theme = useTheme()
   const hidden = useMediaQuery(theme.breakpoints.down('md'))
   const authBackground = useImageVariant(mode, lightImg, darkImg)
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (status === 'authenticated' && session) {
+      router.replace('/dashboards/teacher')
+    }
+  }, [status, session, router])
 
   const {
     control,
@@ -129,7 +137,8 @@ const Login = ({ mode }: { mode: SystemMode }) => {
     })
 
     if (res && res.ok && res.error === null) {
-      const redirectURL = searchParams.get('redirectTo') ?? '/'
+      // Redirect to teacher dashboard after successful login
+      const redirectURL = searchParams.get('redirectTo') ?? '/dashboards/teacher'
 
       router.replace(redirectURL)
     } else {

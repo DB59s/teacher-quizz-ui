@@ -68,15 +68,6 @@ const requestInterceptor = async (config: InternalAxiosRequestConfig) => {
         }
       }
 
-      // Log headers for debugging in development
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Request headers:', {
-          url: config.url,
-          'Content-Language': config.headers['Content-Language'],
-          Authorization: config.headers['Authorization'] ? 'Bearer ***' : 'None',
-          'Content-Type': config.headers['Content-Type']
-        })
-      }
     }
 
     return config
@@ -165,7 +156,6 @@ export const applyInterceptors = (instance: AxiosInstance) => {
   // Add request/response logging interceptor for debugging
   if (process.env.NODE_ENV === 'development') {
     instance.interceptors.request.use(config => {
-      console.log(`🚀 Starting Request: ${config.method?.toUpperCase()} ${config.url}`)
 
       return config
     })

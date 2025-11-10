@@ -67,10 +67,14 @@ const UserDropdown = () => {
 
   const handleUserLogout = async () => {
     try {
-      // Sign out from the app
-      await signOut({ callbackUrl: process.env.NEXT_PUBLIC_APP_URL })
+      // Sign out from the app without redirect (NextAuth might use NEXTAUTH_URL from env)
+      await signOut({ redirect: false })
+      // Manually redirect to login page using current domain
+      router.push('/login')
     } catch (error) {
       console.error(error)
+      // Fallback: redirect to login even if signOut fails
+      router.push('/login')
 
       // Show above error in a toast like following
       // toastService.error((err as Error).message)

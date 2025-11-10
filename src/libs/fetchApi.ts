@@ -43,7 +43,7 @@ export async function fetchApi(input: RequestInfo, init?: RequestInit) {
         }
       })
     } catch (err) {
-      await signOut({ redirect: false })
+      await signOut({ callbackUrl: '/login', redirect: true })
 
       return response
     }

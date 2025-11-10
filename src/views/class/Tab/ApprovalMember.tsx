@@ -5,11 +5,11 @@ import Card from '@mui/material/Card'
 import clsx from 'clsx'
 
 import useTableHead from '@/hooks/useTableHead'
-import { getClassStudents, removeStudentFromClass } from '@/services/class.service'
+import { getClassStudents, approveStudent, rejectStudent } from '@/services/class.service'
 
 import PageLoading from '@/theme/PageLoading'
 
-export default function Members(data: any) {
+export default function ApprovalMember(data: any) {
   const [loading, setLoading] = useState(false)
   const { _id } = data.data
   const [students, setStudents] = useState<any[]>([])
@@ -20,7 +20,9 @@ export default function Members(data: any) {
 
     try {
       const list = await getClassStudents(_id)
-      setStudents(list)
+      // Lọc chỉ lấy học sinh có status là 'pending'
+      const pendingStudents = list.filter((student: any) => student.status === 'pending')
+      setStudents(pendingStudents)
     } catch (error) {
       console.error(error)
     } finally {
@@ -32,12 +34,24 @@ export default function Members(data: any) {
     fetchClassDetails()
   }, [fetchClassDetails])
 
-  console.log('Students:', students)
+  console.log('Pending Students:', students)
 
-  const handleRemove = async (registrationId: string) => {
+  const handleApprove = async (registrationId: string) => {
     setLoading(true)
     try {
-      await removeStudentFromClass(registrationId)
+      await approveStudent(registrationId)
+      await fetchClassDetails()
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleReject = async (registrationId: string) => {
+    setLoading(true)
+    try {
+      await rejectStudent(registrationId)
       await fetchClassDetails()
     } catch (error) {
       console.error(error)
@@ -72,7 +86,7 @@ export default function Members(data: any) {
             {students.length === 0 ? (
               <tr>
                 <td colSpan={TABLE_HEAD()?.length} className='p-4 text-center text-gray-500'>
-                  Chưa có học sinh
+                  Không có học sinh chờ phê duyệt
                 </td>
               </tr>
             ) : (
@@ -83,16 +97,20 @@ export default function Members(data: any) {
                   <td className='px-3 py-3 text-center'>{student.student.student_code}</td>
                   <td className='px-3 py-3 text-center'>{student.student.email}</td>
                   <td className='px-3 py-3 text-center'>
-                    {student.status === 'approved' ? (
+                    <div className='flex gap-2 justify-center'>
+                      <button
+                        className='px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600'
+                        onClick={() => handleApprove(student.registration_id)}
+                      >
+                        Phê duyệt
+                      </button>
                       <button
                         className='px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600'
-                        onClick={() => handleRemove(student.registration_id)}
+                        onClick={() => handleReject(student.registration_id)}
                       >
-                        Xóa
+                        Từ chối
                       </button>
-                    ) : (
-                      <span>{student.status}</span>
-                    )}
+                    </div>
                   </td>
                 </tr>
               ))

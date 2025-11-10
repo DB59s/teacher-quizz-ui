@@ -20,6 +20,7 @@ import CustomTabList from '@core/components/mui/TabList'
 import Newsfeed from '@views/class/Tab/Newsfeed'
 import Members from '@views/class/Tab/Members'
 import Exercises from '@views/class/Tab/Exercises'
+import ApprovalMember from '@views/class/Tab/ApprovalMember'
 import PageLoading from '@/theme/PageLoading'
 
 export default function ClassPage({ params }: { params: Promise<{ classId: string }> }) {
@@ -59,8 +60,6 @@ export default function ClassPage({ params }: { params: Promise<{ classId: strin
     }
   }, [classId])
 
-  console.log('Class data:', data)
-
   const handleChange = useCallback(
     (event: SyntheticEvent, value: string) => {
       setActiveTab(value)
@@ -91,6 +90,7 @@ export default function ClassPage({ params }: { params: Promise<{ classId: strin
               <Tab label={<div className='flex items-center gap-1.5'>Bảng tin</div>} value='newsfeed' />
               <Tab label={<div className='flex items-center gap-1.5'>Bài tập trên lớp</div>} value='exercises' />
               <Tab label={<div className='flex items-center gap-1.5'>Mọi người</div>} value='members' />
+              <Tab label={<div className='flex items-center gap-1.5'>Phê duyệt</div>} value='approval' />
             </CustomTabList>
             <TabPanel value={'newsfeed'} className='p-0'>
               <Newsfeed data={data} />
@@ -100,6 +100,9 @@ export default function ClassPage({ params }: { params: Promise<{ classId: strin
             </TabPanel>
             <TabPanel value={'members'} className='p-0'>
               <Members data={data} />
+            </TabPanel>
+            <TabPanel value={'approval'} className='p-0'>
+              <ApprovalMember data={data} />
             </TabPanel>
           </TabContext>
         </Grid>

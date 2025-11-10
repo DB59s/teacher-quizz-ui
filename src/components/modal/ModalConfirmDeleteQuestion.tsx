@@ -12,6 +12,7 @@ import Typography from '@mui/material/Typography'
 // Component Imports
 import DialogCloseButton from '../dialogs/DialogCloseButton'
 import { fetchApi } from '@/libs/fetchApi'
+import { toast } from 'react-toastify'
 
 type Question = {
   id: string
@@ -45,6 +46,12 @@ export default function ModalConfirmDeleteQuestion({
 
       if (!res.ok) throw new Error('Xoá câu hỏi thất bại')
 
+      // Show success toast
+      toast.success('Xóa câu hỏi thành công', {
+        position: 'bottom-right',
+        autoClose: 3000
+      })
+
       // Close modal
       setOpen(false)
 
@@ -52,8 +59,12 @@ export default function ModalConfirmDeleteQuestion({
       if (onDeleteSuccess) {
         onDeleteSuccess()
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error)
+      toast.error(error.message || 'Có lỗi xảy ra khi xóa câu hỏi', {
+        position: 'bottom-right',
+        autoClose: 3000
+      })
     } finally {
       setIsDeleting(false)
     }
