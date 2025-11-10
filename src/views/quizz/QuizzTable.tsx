@@ -10,6 +10,7 @@ import MenuItem from '@mui/material/MenuItem'
 import clsx from 'clsx'
 
 import { Edit2, Eye, Trash } from 'iconsax-react'
+import { toast } from 'react-toastify'
 
 import { useQueryParams } from '@/hooks/useQueryParams'
 import useTableHead from '@/hooks/useTableHead'
@@ -19,6 +20,9 @@ import CustomIconButton from '@/@core/components/mui/IconButton'
 import CustomTextField from '@/@core/components/mui/TextField'
 import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
 import ModalConfirmDeleteQuizz from '@/components/modal/ModalConfirmDeleteQuizz'
+import QuizDetailModal from '@/components/dialogs/QuizDetailModal'
+import EditQuizModal from '@/components/dialogs/EditQuizModal'
+import { deleteQuiz } from '@/services/quiz.service'
 
 type PaginationData = {
   page: number
@@ -37,6 +41,14 @@ export default function QuizzTable() {
   // States for delete confirmation modal
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [quizToDelete, setQuizToDelete] = useState<{ id: string; name: string; description?: string } | null>(null)
+
+  // States for quiz detail modal
+  const [showQuizDetailModal, setShowQuizDetailModal] = useState(false)
+  const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null)
+
+  // States for edit quiz modal
+  const [showEditQuizModal, setShowEditQuizModal] = useState(false)
+  const [selectedEditQuizId, setSelectedEditQuizId] = useState<string | null>(null)
 
   // Lấy search params từ URL
   const currentSearchParams = useMemo(
@@ -108,13 +120,28 @@ export default function QuizzTable() {
     setShowDeleteDialog(true)
   }
 
-  const handleDeleteSuccess = () => {
-    // Reset states
-    setQuizToDelete(null)
-    setShowDeleteDialog(false)
+  const handleDeleteSuccess = async () => {
+    if (!quizToDelete) return
 
-    // Refresh quizzes list
-    fetchQuizzes()
+    try {
+      await deleteQuiz(quizToDelete.id)
+      toast.success('Xóa thành công', {
+        position: 'bottom-right',
+        autoClose: 3000
+      })
+
+      // Reset states
+      setQuizToDelete(null)
+      setShowDeleteDialog(false)
+
+      // Refresh quizzes list
+      fetchQuizzes()
+    } catch (error: any) {
+      toast.error(error.message || 'Có lỗi xảy ra khi xóa quiz', {
+        position: 'bottom-right',
+        autoClose: 3000
+      })
+    }
   }
 
   console.log('Quizzes:', quizzes)
@@ -164,11 +191,24 @@ export default function QuizzTable() {
                   <td className='px-3 py-4 text-center'>{index + 1}</td>
                   <td className='action px-3 py-3'>
                     <div className='flex items-center justify-center gap-2'>
-                      <CustomIconButton size='small' onClick={() => {}}>
+                      <CustomIconButton
+                        size='small'
+                        onClick={() => {
+                          setSelectedQuizId(quiz.id || quiz._id)
+                          setShowQuizDetailModal(true)
+                        }}
+                      >
                         <Eye size={18} color='#000' />
                       </CustomIconButton>
 
-                      <CustomIconButton size='small' color='primary'>
+                      <CustomIconButton
+                        size='small'
+                        color='primary'
+                        onClick={() => {
+                          setSelectedEditQuizId(quiz.id || quiz._id)
+                          setShowEditQuizModal(true)
+                        }}
+                      >
                         <Edit2 size={18} color='#000' />
                       </CustomIconButton>
 
@@ -199,6 +239,29 @@ export default function QuizzTable() {
         setOpen={setShowDeleteDialog}
         quiz={quizToDelete}
         onDeleteSuccess={handleDeleteSuccess}
+      />
+
+      {/* Quiz Detail Modal */}
+      <QuizDetailModal
+        open={showQuizDetailModal}
+        onClose={() => {
+          setShowQuizDetailModal(false)
+          setSelectedQuizId(null)
+        }}
+        quizId={selectedQuizId}
+      />
+
+      {/* Edit Quiz Modal */}
+      <EditQuizModal
+        open={showEditQuizModal}
+        onClose={() => {
+          setShowEditQuizModal(false)
+          setSelectedEditQuizId(null)
+        }}
+        quizId={selectedEditQuizId}
+        onUpdateSuccess={() => {
+          fetchQuizzes()
+        }}
       />
     </Card>
   )

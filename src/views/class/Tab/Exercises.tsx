@@ -15,12 +15,16 @@ import DialogActions from '@mui/material/DialogActions'
 
 import clsx from 'clsx'
 import { Edit2, Eye, Trash } from 'iconsax-react'
+import { toast } from 'react-toastify'
 
 import { fetchApi } from '@/libs/fetchApi'
 import PageLoading from '@/theme/PageLoading'
 import CustomIconButton from '@/@core/components/mui/IconButton'
 import CustomTextField from '@/@core/components/mui/TextField'
 import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
+import QuizDetailModal from '@/components/dialogs/QuizDetailModal'
+import EditQuizModal from '@/components/dialogs/EditQuizModal'
+import { deleteQuiz } from '@/services/quiz.service'
 
 type Quiz = {
   id: string
@@ -69,6 +73,19 @@ export default function Exercises({ data }: any) {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [startTime, setStartTime] = useState('')
   const [endTime, setEndTime] = useState('')
+
+  // States for quiz detail modal
+  const [showQuizDetailModal, setShowQuizDetailModal] = useState(false)
+  const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null)
+
+  // States for edit quiz modal
+  const [showEditQuizModal, setShowEditQuizModal] = useState(false)
+  const [selectedEditQuizId, setSelectedEditQuizId] = useState<string | null>(null)
+
+  // States for delete confirmation
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [quizToDelete, setQuizToDelete] = useState<ClassQuiz | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   // Fetch available quizzes from teacher
   const fetchAvailableQuizzes = useCallback(async () => {
@@ -176,6 +193,40 @@ export default function Exercises({ data }: any) {
     setCurrentPage(1)
   }
 
+  // Handle delete quiz
+  const handleDeleteClick = (classQuiz: ClassQuiz) => {
+    setQuizToDelete(classQuiz)
+    setShowDeleteDialog(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!quizToDelete) return
+
+    setDeleting(true)
+
+    try {
+      await deleteQuiz(quizToDelete.quiz_id)
+      toast.success('Xóa thành công', {
+        position: 'bottom-right',
+        autoClose: 3000
+      })
+
+      // Refresh class quizzes list
+      fetchClassQuizzes()
+
+      // Close dialog and reset state
+      setShowDeleteDialog(false)
+      setQuizToDelete(null)
+    } catch (error: any) {
+      toast.error(error.message || 'Có lỗi xảy ra khi xóa quiz', {
+        position: 'bottom-right',
+        autoClose: 3000
+      })
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   // Load data on component mount
   useEffect(() => {
     if (class_id) {
@@ -253,13 +304,26 @@ export default function Exercises({ data }: any) {
                     <td className='px-3 py-4 text-center'>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                     <td className='action px-3 py-3'>
                       <div className='flex items-center justify-center gap-2'>
-                        <CustomIconButton size='small' onClick={() => {}}>
+                        <CustomIconButton
+                          size='small'
+                          onClick={() => {
+                            setSelectedQuizId(classQuiz.quiz_id)
+                            setShowQuizDetailModal(true)
+                          }}
+                        >
                           <Eye size={18} color='#000' />
                         </CustomIconButton>
-                        <CustomIconButton size='small' color='primary'>
+                        <CustomIconButton
+                          size='small'
+                          color='primary'
+                          onClick={() => {
+                            setSelectedEditQuizId(classQuiz.quiz_id)
+                            setShowEditQuizModal(true)
+                          }}
+                        >
                           <Edit2 size={18} color='#000' />
                         </CustomIconButton>
-                        <CustomIconButton size='small' onClick={() => {}}>
+                        <CustomIconButton size='small' onClick={() => handleDeleteClick(classQuiz)}>
                           <Trash size={18} color='#ED0909' />
                         </CustomIconButton>
                       </div>
@@ -268,7 +332,7 @@ export default function Exercises({ data }: any) {
                     <td className='px-3 py-4 text-center'>{new Date(classQuiz.start_time).toLocaleString('vi-VN')}</td>
                     <td className='px-3 py-4 text-center'>{new Date(classQuiz.end_time).toLocaleString('vi-VN')}</td>
                     <td className='px-3 py-4 text-center'>
-                      {new Date(classQuiz.created_at).toLocaleDateString('vi-VN')}
+                      {new Date(classQuiz.quiz?.created_at).toLocaleDateString('vi-VN')}
                     </td>
                   </tr>
                 )
@@ -358,6 +422,47 @@ export default function Exercises({ data }: any) {
           <Button onClick={() => setShowConfirmDialog(false)}>Hủy</Button>
           <Button variant='contained' onClick={handleAddQuizToClass} disabled={!startTime || !endTime}>
             Xác nhận
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Quiz Detail Modal */}
+      <QuizDetailModal
+        open={showQuizDetailModal}
+        onClose={() => {
+          setShowQuizDetailModal(false)
+          setSelectedQuizId(null)
+        }}
+        quizId={selectedQuizId}
+      />
+
+      {/* Edit Quiz Modal */}
+      <EditQuizModal
+        open={showEditQuizModal}
+        onClose={() => {
+          setShowEditQuizModal(false)
+          setSelectedEditQuizId(null)
+        }}
+        quizId={selectedEditQuizId}
+        onUpdateSuccess={() => {
+          fetchClassQuizzes()
+        }}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onClose={() => !deleting && setShowDeleteDialog(false)} maxWidth='sm' fullWidth>
+        <DialogTitle>Xác nhận xóa</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Bạn có chắc chắn muốn xóa quiz <strong>{quizToDelete?.quiz?.name}</strong> khỏi lớp học này không?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowDeleteDialog(false)} disabled={deleting}>
+            Hủy
+          </Button>
+          <Button variant='contained' color='error' onClick={handleConfirmDelete} disabled={deleting}>
+            {deleting ? 'Đang xóa...' : 'Xóa'}
           </Button>
         </DialogActions>
       </Dialog>
