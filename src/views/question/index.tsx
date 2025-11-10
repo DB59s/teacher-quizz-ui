@@ -27,6 +27,7 @@ import CustomTextField from '@/@core/components/mui/TextField'
 import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
 import ModalConfirmDeleteQuestion from '@/components/modal/ModalConfirmDeleteQuestion'
 import ModalCreateQuestion from '@/components/modal/ModalCreateQuestion'
+import QuestionDetailModal from '@/components/dialogs/QuestionDetailModal'
 
 type PaginationData = {
   page: number
@@ -49,6 +50,14 @@ export default function QuestionView() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [questionToDelete, setQuestionToDelete] = useState<{ id: string; content: string } | null>(null)
   const [isModalCreateQuestionOpen, setIsModalCreateQuestionOpen] = useState(false)
+
+  // States for question detail modal
+  const [showQuestionDetailModal, setShowQuestionDetailModal] = useState(false)
+  const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null)
+
+  // States for edit question modal
+  const [isModalEditQuestionOpen, setIsModalEditQuestionOpen] = useState(false)
+  const [selectedEditQuestionId, setSelectedEditQuestionId] = useState<string | null>(null)
 
   // Lấy search params từ URL thực tế
   const currentSearchParams = useMemo(
@@ -95,7 +104,6 @@ export default function QuestionView() {
       setQuestionData(questionsData?.data || [])
 
       // Đảm bảo pagination data có page từ searchParams
-
       const paginationWithCorrectPage = {
         ...questionsData?.pagination,
         page: parseInt(currentSearchParams.page || '1'),
@@ -121,11 +129,6 @@ export default function QuestionView() {
   useEffect(() => {
     fetchQuestions()
   }, [fetchQuestions])
-
-  // Debug effect để kiểm tra searchParams
-  useEffect(() => {
-    console.log('SearchParams changed:', currentSearchParams)
-  }, [currentSearchParams])
 
   // Lắng nghe custom event để refresh khi tạo câu hỏi thành công
   useEffect(() => {
@@ -207,8 +210,6 @@ export default function QuestionView() {
   }, [])
 
   const handlePageChange = (page: number) => {
-    console.log('Page change to:', page) // Debug log
-
     const newParams = { ...currentSearchParams, page: page.toString() }
 
     updateQueryParams(newParams)
@@ -328,13 +329,22 @@ export default function QuestionView() {
                       <td className='px-3 py-3 text-center'>{index + 1}</td>
                       <td className='action px-3 py-3'>
                         <div className='flex items-center justify-center gap-2'>
-                          <CustomIconButton size='small' onClick={() => {}}>
+                          <CustomIconButton
+                            size='small'
+                            onClick={() => {
+                              setSelectedQuestionId(item.id)
+                              setShowQuestionDetailModal(true)
+                            }}
+                          >
                             <Eye size={18} color='#000' />
                           </CustomIconButton>
 
                           <CustomIconButton
                             size='small'
-                            href={item?.id ? `/question/${item?.id}/edit` : ''}
+                            onClick={() => {
+                              setSelectedEditQuestionId(item.id)
+                              setIsModalEditQuestionOpen(true)
+                            }}
                             color='primary'
                           >
                             <Edit2 size={18} color='#000' />
@@ -378,6 +388,26 @@ export default function QuestionView() {
         onDeleteSuccess={handleDeleteSuccess}
       />
       <ModalCreateQuestion type='create' open={isModalCreateQuestionOpen} setOpen={setIsModalCreateQuestionOpen} />
+      <ModalCreateQuestion
+        type='edit'
+        open={isModalEditQuestionOpen}
+        setOpen={open => {
+          setIsModalEditQuestionOpen(open)
+          
+          if (!open) {
+            setSelectedEditQuestionId(null)
+          }
+        }}
+        questionId={selectedEditQuestionId}
+      />
+      <QuestionDetailModal
+        open={showQuestionDetailModal}
+        onClose={() => {
+          setShowQuestionDetailModal(false)
+          setSelectedQuestionId(null)
+        }}
+        questionId={selectedQuestionId}
+      />
     </Grid>
   )
 }

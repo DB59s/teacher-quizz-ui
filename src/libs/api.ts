@@ -244,7 +244,7 @@ export const serverApi = async (input: string, init: AxiosRequestConfig = {}) =>
     const { response } = error
 
     if (response?.status === HTTP_ERROR_CODE.UNAUTHORIZED) {
-      redirect('/auth/signin')
+      redirect('/login')
     }
 
     if (response?.status === HTTP_ERROR_CODE.FORBIDDEN) {

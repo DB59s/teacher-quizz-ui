@@ -25,6 +25,7 @@ import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
 import QuizDetailModal from '@/components/dialogs/QuizDetailModal'
 import EditQuizModal from '@/components/dialogs/EditQuizModal'
 import { deleteQuiz } from '@/services/quiz.service'
+import useClassQuizzes from '@/hooks/useClassQuizzes'
 
 type Quiz = {
   id: string
@@ -56,10 +57,16 @@ type PaginationData = {
 export default function Exercises({ data }: any) {
   const class_id = data?._id
 
+  // Hook to get class quizzes
+  const { quizIds: addedQuizIds, refetch: refetchClassQuizzes } = useClassQuizzes(class_id)
+
   // States for available quizzes
   const [availableQuizzes, setAvailableQuizzes] = useState<Quiz[]>([])
   const [loadingQuizzes, setLoadingQuizzes] = useState(false)
   const [showQuizDialog, setShowQuizDialog] = useState(false)
+
+  // Filter out quizzes that are already added to the class
+  const filteredAvailableQuizzes = availableQuizzes.filter(quiz => !addedQuizIds.includes(quiz.id))
 
   // States for class quizzes table
   const [classQuizzes, setClassQuizzes] = useState<ClassQuiz[]>([])
@@ -157,6 +164,7 @@ export default function Exercises({ data }: any) {
 
       // Refresh class quizzes list
       fetchClassQuizzes()
+      refetchClassQuizzes()
 
       // Reset states and close dialogs
       setSelectedQuiz(null)
@@ -213,6 +221,7 @@ export default function Exercises({ data }: any) {
 
       // Refresh class quizzes list
       fetchClassQuizzes()
+      refetchClassQuizzes()
 
       // Close dialog and reset state
       setShowDeleteDialog(false)
@@ -250,6 +259,7 @@ export default function Exercises({ data }: any) {
         <Button
           variant='contained'
           onClick={() => {
+            refetchClassQuizzes()
             fetchAvailableQuizzes()
             setShowQuizDialog(true)
           }}
@@ -358,9 +368,9 @@ export default function Exercises({ data }: any) {
         <DialogTitle>Chọn Quiz để thêm vào lớp</DialogTitle>
         <DialogContent>
           <PageLoading show={loadingQuizzes} />
-          {availableQuizzes.length > 0 ? (
+          {filteredAvailableQuizzes.length > 0 ? (
             <div className='space-y-2'>
-              {availableQuizzes.map(quiz => (
+              {filteredAvailableQuizzes.map(quiz => (
                 <Card
                   key={quiz.id}
                   className='p-4 cursor-pointer hover:bg-grey-50'
@@ -377,7 +387,9 @@ export default function Exercises({ data }: any) {
               ))}
             </div>
           ) : (
-            <Typography>Chưa có quiz nào được tạo.</Typography>
+            <Typography>
+              {availableQuizzes.length === 0 ? 'Chưa có quiz nào được tạo.' : 'Tất cả quiz đã được thêm vào lớp này.'}
+            </Typography>
           )}
         </DialogContent>
         <DialogActions>

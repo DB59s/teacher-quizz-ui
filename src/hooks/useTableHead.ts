@@ -130,10 +130,10 @@ const useTableHead = () => {
           minWidth: 200
         },
         {
-          name: 'Số điện thoại',
+          name: 'Hành động',
           position: 'center',
           sortable: false,
-          field: 'phone_number',
+          field: 'status',
           minWidth: 150
         }
       ]
