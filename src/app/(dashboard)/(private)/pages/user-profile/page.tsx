@@ -114,6 +114,7 @@ const ProfilePage = async () => {
     return <UserProfile data={profileData} tabContentList={tabContentList(profileData)} />
   } catch (error) {
     console.error('Error fetching user profile:', error)
+
     // Return empty data on error
     const emptyData: Data = {
       profileHeader: {

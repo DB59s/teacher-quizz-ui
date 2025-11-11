@@ -1,8 +1,7 @@
-import axios, { type AxiosInstance } from 'axios'
-
 import { getServerSession } from 'next-auth'
 import { getSession, signOut } from 'next-auth/react'
-import { redirect } from 'next/navigation'
+
+import axios, { type AxiosInstance } from 'axios'
 
 import { authOptions } from '@/libs/auth'
 import { applyInterceptors } from '@/libs/api-interceptors'
@@ -68,6 +67,7 @@ export const getTeacherDashboardServer = async (): Promise<DashboardData> => {
 
   try {
     const instance = getDashboardServerInstance()
+
     const response = await instance.get<DashboardResponse>('/api/v1/dashboard/teacher', {
       headers: {
         'Content-Type': 'application/json',
@@ -125,6 +125,7 @@ export const getTeacherDashboard = async (): Promise<DashboardData> => {
     }
 
     const instance = getDashboardClientInstance()
+
     const response = await instance.get<DashboardResponse>('/api/v1/dashboard/teacher', {
       headers: {
         'Content-Type': 'application/json',

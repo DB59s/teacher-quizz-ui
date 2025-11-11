@@ -148,6 +148,7 @@ const ForgotPassword = ({ mode }: { mode: SystemMode }) => {
 
     try {
       const response = await authService.forgotPassword({ email: data.email })
+
       setEmail(data.email)
       setSuccess(response.message || 'OTP has been sent to your email')
       setStep('otp')
@@ -166,6 +167,7 @@ const ForgotPassword = ({ mode }: { mode: SystemMode }) => {
 
     try {
       const response = await authService.verifyOTP({ email, otp: data.otp })
+
       setSuccess(response.message || 'OTP verified successfully')
       setStep('reset')
     } catch (err: any) {
@@ -185,6 +187,7 @@ const ForgotPassword = ({ mode }: { mode: SystemMode }) => {
     if (data.newPassword !== data.confirmNewPassword) {
       setError('Passwords do not match')
       setLoading(false)
+
       return
     }
 
@@ -194,7 +197,9 @@ const ForgotPassword = ({ mode }: { mode: SystemMode }) => {
         newPassword: data.newPassword,
         confirmNewPassword: data.confirmNewPassword
       })
+
       setSuccess(response.message || 'Password reset successfully! Redirecting to login...')
+      
       // Redirect to login after 2 seconds
       setTimeout(() => {
         router.push('/login')

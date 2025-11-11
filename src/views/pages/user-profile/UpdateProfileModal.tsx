@@ -2,6 +2,8 @@
 
 // React Imports
 import { useEffect, useState } from 'react'
+
+// Next Imports
 import { useRouter } from 'next/navigation'
 
 // MUI Imports
@@ -76,16 +78,20 @@ const UpdateProfileModal = ({ open, setOpen }: UpdateProfileModalProps) => {
 
   const onSubmit = async (data: UpdateProfileFormValues) => {
     setLoading(true)
+
     try {
       await updateUserProfile(data)
       toast.success('Cập nhật thông tin thành công!')
       setOpen(false)
+
       // Refresh the page to show updated data
       router.refresh()
     } catch (error: any) {
       console.error('Error updating profile:', error)
       const errorMessage = error.response?.data?.message || error.message || 'Có lỗi xảy ra khi cập nhật thông tin'
+      
       toast.error(errorMessage)
+
     } finally {
       setLoading(false)
     }

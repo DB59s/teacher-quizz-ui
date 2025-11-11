@@ -33,8 +33,10 @@ axiosClient.interceptors.request.use(
 
         if (!isAuthEndpoint) {
           console.log('No token found, redirecting to login...')
+
           // Redirect to login if no token for protected endpoints
           window.location.href = '/login'
+
           return Promise.reject(new Error('No authentication token'))
         }
       }
@@ -56,6 +58,7 @@ axiosClient.interceptors.response.use(
     // Handle 401 Unauthorized - Token expired or missing
     if (error.response?.status === 401) {
       console.log('Token expired or invalid, redirecting to login...')
+
       if (isClient) {
         // Clear session and redirect to login
         await signOut({

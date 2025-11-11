@@ -53,6 +53,7 @@ export const authService = {
    */
   login: async (credentials: LoginRequest) => {
     const response = await apiClient.post<AuthResponse>('/api/v1/auth/login', credentials)
+
     return response.data
   },
 
@@ -61,6 +62,7 @@ export const authService = {
    */
   register: async (data: RegisterRequest) => {
     const response = await apiClient.post<AuthResponse>('/api/v1/auth/register', data)
+
     return response.data
   },
 
@@ -69,6 +71,7 @@ export const authService = {
    */
   logout: async () => {
     const response = await apiClient.post('/api/v1/auth/logout')
+
     return response.data
   },
 
@@ -77,6 +80,7 @@ export const authService = {
    */
   getProfile: async () => {
     const response = await apiClient.get('/api/v1/auth/profile')
+
     return response.data
   },
 
@@ -85,6 +89,7 @@ export const authService = {
    */
   forgotPassword: async (data: ForgotPasswordRequest) => {
     const response = await apiClient.post<ForgotPasswordResponse>('/api/v1/auth/forgot-password', data)
+
     return response.data
   },
 
@@ -93,6 +98,7 @@ export const authService = {
    */
   verifyOTP: async (data: VerifyOTPRequest) => {
     const response = await apiClient.post<ForgotPasswordResponse>('/api/v1/auth/verify-otp', data)
+
     return response.data
   },
 
@@ -101,7 +107,7 @@ export const authService = {
    */
   resetPassword: async (data: ResetPasswordRequest) => {
     const response = await apiClient.post<ForgotPasswordResponse>('/api/v1/auth/reset-password', data)
+
     return response.data
   }
 }
-
