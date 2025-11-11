@@ -1,9 +1,11 @@
-import axios from 'axios'
+import axios, { type AxiosInstance } from 'axios'
 
 import { getServerSession } from 'next-auth'
-import { getSession } from 'next-auth/react'
+import { getSession, signOut } from 'next-auth/react'
+import { redirect } from 'next/navigation'
 
 import { authOptions } from '@/libs/auth'
+import { applyInterceptors } from '@/libs/api-interceptors'
 
 export interface DashboardKPI {
   total_classes: number
@@ -29,19 +31,47 @@ export interface DashboardResponse {
 
 const API_BASE_URL = 'https://api.vuquangduy.io.vn'
 
+// Create axios instance for dashboard service with interceptors
+let dashboardServerInstance: AxiosInstance | null = null
+
+const getDashboardServerInstance = (): AxiosInstance => {
+  if (!dashboardServerInstance) {
+    dashboardServerInstance = axios.create({
+      baseURL: API_BASE_URL
+    })
+    applyInterceptors(dashboardServerInstance)
+  }
+
+  return dashboardServerInstance
+}
+
+/**
+ * Custom error class for authentication errors
+ */
+export class AuthenticationError extends Error {
+  constructor(message: string = 'Authentication required') {
+    super(message)
+    this.name = 'AuthenticationError'
+  }
+}
+
 /**
  * Lấy dữ liệu dashboard cho giáo viên (Server-side)
  * @returns Promise<DashboardData>
  */
 export const getTeacherDashboardServer = async (): Promise<DashboardData> => {
-  try {
-    const session = await getServerSession(authOptions)
-    const token = session?.accessToken
+  const session = await getServerSession(authOptions)
 
-    const response = await axios.get<DashboardResponse>(`${API_BASE_URL}/api/v1/dashboard/teacher`, {
+  if (!session?.accessToken) {
+    throw new AuthenticationError('No access token available')
+  }
+
+  try {
+    const instance = getDashboardServerInstance()
+    const response = await instance.get<DashboardResponse>('/api/v1/dashboard/teacher', {
       headers: {
         'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` })
+        Authorization: `Bearer ${session.accessToken}`
       }
     })
 
@@ -50,10 +80,34 @@ export const getTeacherDashboardServer = async (): Promise<DashboardData> => {
     }
 
     throw new Error('Failed to fetch dashboard data')
-  } catch (error) {
+  } catch (error: any) {
+    // Re-throw redirect errors (NEXT_REDIRECT) - don't catch them
+    if (error && typeof error === 'object' && 'digest' in error && error.digest?.startsWith('NEXT_REDIRECT')) {
+      throw error
+    }
+
+    // Handle 401 errors - throw AuthenticationError to be handled by component
+    if (error.response?.status === 401) {
+      throw new AuthenticationError('Token expired or invalid')
+    }
+
     console.error('Error fetching teacher dashboard:', error)
     throw error
   }
+}
+
+// Create axios instance for client-side dashboard service
+let dashboardClientInstance: AxiosInstance | null = null
+
+const getDashboardClientInstance = (): AxiosInstance => {
+  if (!dashboardClientInstance) {
+    dashboardClientInstance = axios.create({
+      baseURL: API_BASE_URL
+    })
+    applyInterceptors(dashboardClientInstance)
+  }
+
+  return dashboardClientInstance
 }
 
 /**
@@ -65,10 +119,16 @@ export const getTeacherDashboard = async (): Promise<DashboardData> => {
     const session = await getSession()
     const token = session?.accessToken
 
-    const response = await axios.get<DashboardResponse>(`${API_BASE_URL}/api/v1/dashboard/teacher`, {
+    if (!token) {
+      await signOut({ callbackUrl: '/login', redirect: true })
+      throw new Error('No access token available')
+    }
+
+    const instance = getDashboardClientInstance()
+    const response = await instance.get<DashboardResponse>('/api/v1/dashboard/teacher', {
       headers: {
         'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` })
+        Authorization: `Bearer ${token}`
       }
     })
 
@@ -77,7 +137,12 @@ export const getTeacherDashboard = async (): Promise<DashboardData> => {
     }
 
     throw new Error('Failed to fetch dashboard data')
-  } catch (error) {
+  } catch (error: any) {
+    // Handle 401 errors - sign out and redirect
+    if (error.response?.status === 401) {
+      await signOut({ callbackUrl: '/login', redirect: true })
+    }
+
     console.error('Error fetching teacher dashboard:', error)
     throw error
   }

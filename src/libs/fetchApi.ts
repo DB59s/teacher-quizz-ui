@@ -28,24 +28,40 @@ export async function fetchApi(input: RequestInfo, init?: RequestInit) {
     }
   })
 
-  if (response.status === 401 && refreshToken) {
-    try {
-      const refreshed = await callRefreshToken(refreshToken)
+  // Handle 401 Unauthorized
+  if (response.status === 401) {
+    // If we have a refresh token, try to refresh
+    if (refreshToken) {
+      try {
+        const refreshed = await callRefreshToken(refreshToken)
 
-      token = refreshed.accessToken
-      refreshToken = refreshed.refreshToken
-      response = await fetch(input, {
-        ...init,
-        headers: {
-          ...(init?.headers || {}),
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          'Content-Type': 'application/json'
+        token = refreshed.accessToken
+        refreshToken = refreshed.refreshToken
+
+        // Retry the request with new token
+        response = await fetch(input, {
+          ...init,
+          headers: {
+            ...(init?.headers || {}),
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            'Content-Type': 'application/json'
+          }
+        })
+
+        // If still 401 after refresh, sign out
+        if (response.status === 401) {
+          await signOut({ callbackUrl: '/login', redirect: true })
+          throw new Error('Authentication failed after token refresh')
         }
-      })
-    } catch (err) {
+      } catch (err) {
+        // Refresh token failed or expired, sign out
+        await signOut({ callbackUrl: '/login', redirect: true })
+        throw new Error('Token refresh failed. Please log in again.')
+      }
+    } else {
+      // No refresh token available, sign out immediately
       await signOut({ callbackUrl: '/login', redirect: true })
-
-      return response
+      throw new Error('No valid session. Please log in again.')
     }
   }
 
