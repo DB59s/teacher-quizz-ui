@@ -24,7 +24,10 @@ import CustomTextField from '@/@core/components/mui/TextField'
 import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
 import QuizDetailModal from '@/components/dialogs/QuizDetailModal'
 import EditQuizModal from '@/components/dialogs/EditQuizModal'
-import { deleteQuiz } from '@/services/quiz.service'
+
+// import { deleteQuiz } from '@/services/quiz.service'
+
+import { deleteClassQuiz } from '@/services/classQuizzes.service'
 import useClassQuizzes from '@/hooks/useClassQuizzes'
 
 type Quiz = {
@@ -213,7 +216,7 @@ export default function Exercises({ data }: any) {
     setDeleting(true)
 
     try {
-      await deleteQuiz(quizToDelete.quiz_id)
+      await deleteClassQuiz(quizToDelete.id)
       toast.success('Xóa thành công', {
         position: 'bottom-right',
         autoClose: 3000

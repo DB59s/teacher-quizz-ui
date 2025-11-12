@@ -19,7 +19,7 @@ const TeacherDashboard = async () => {
 
     return (
       <>
-        <Typography variant='h1' className='mb-6'>
+        <Typography variant='h4' className='mb-6'>
           Tổng quan
         </Typography>
         <Grid container spacing={6}>

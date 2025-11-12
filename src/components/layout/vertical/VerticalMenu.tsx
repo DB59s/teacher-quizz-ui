@@ -105,9 +105,9 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
         <MenuItem href='/quizz' activeUrl='/quizz' icon={<i className='tabler-puzzle' />} exactMatch={false}>
           Danh sách quizz
         </MenuItem>
-        <MenuItem href='/profile' activeUrl='/profile' icon={<i className='tabler-user-circle' />} exactMatch={false}>
+        {/* <MenuItem href='/profile' activeUrl='/profile' icon={<i className='tabler-user-circle' />} exactMatch={false}>
           Hồ sơ
-        </MenuItem>
+        </MenuItem> */}
         {/* <SubMenu label='frontPages' icon={<i className='tabler-files' />}>
           <MenuItem href='/front-pages/landing-page' target='_blank'>
             landing

@@ -80,13 +80,6 @@ const requestInterceptor = async (config: InternalAxiosRequestConfig) => {
 
 // Response interceptor for success
 const responseSuccessInterceptor = (response: any) => {
-  // Log successful requests in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`✅ ${response.config.method?.toUpperCase()} ${response.config.url}`, {
-      status: response.status,
-      data: response.data
-    })
-  }
 
   return response
 }
