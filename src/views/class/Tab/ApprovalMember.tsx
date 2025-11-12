@@ -4,11 +4,15 @@ import Card from '@mui/material/Card'
 
 import clsx from 'clsx'
 
+import MenuItem from '@mui/material/MenuItem'
+
 import useTableHead from '@/hooks/useTableHead'
 import { getClassStudents, approveStudent, rejectStudent } from '@/services/class.service'
 
 import PageLoading from '@/theme/PageLoading'
-import MenuItem from '@mui/material/MenuItem'
+
+
+
 import CustomTextField from '@/@core/components/mui/TextField'
 import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
 
@@ -27,10 +31,13 @@ export default function ApprovalMember(data: any) {
       const list = await getClassStudents(_id)
 
       // Lọc chỉ lấy học sinh có status là 'pending'
+
       const pendingStudents = list.filter((student: any) => student.status === 'pending')
 
       setStudents(pendingStudents)
+      
       // Reset về trang 1 khi dữ liệu thay đổi
+      
       setCurrentPage(1)
     } catch (error) {
       console.error(error)
