@@ -1,6 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+
+import { useRouter } from 'next/navigation'
+
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
@@ -13,8 +16,11 @@ import InputLabel from '@mui/material/InputLabel'
 import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
 import Stack from '@mui/material/Stack'
+
 import { toast } from 'react-toastify'
-import { useRouter } from 'next/navigation'
+
+
+
 
 import { updateClass, deleteClass, type UpdateClassPayload } from '@/services/class.service'
 
@@ -34,6 +40,7 @@ export default function UpdateClassModal({ open, onClose, classData }: UpdateCla
   const [loading, setLoading] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
   const [formData, setFormData] = useState<UpdateClassPayload>({
     name: classData.name,
     description: classData.description,
@@ -47,11 +54,13 @@ export default function UpdateClassModal({ open, onClose, classData }: UpdateCla
   const handleUpdate = async () => {
     if (!formData.name.trim()) {
       toast.error('Tên lớp học không được để trống')
+
       return
     }
 
     if (!formData.description.trim()) {
       toast.error('Mô tả không được để trống')
+      
       return
     }
 
