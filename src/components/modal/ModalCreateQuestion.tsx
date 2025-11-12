@@ -256,15 +256,21 @@ export default function ModalCreateQuestion({ type, open, setOpen, questionId }:
                   control={control}
                   rules={{ required: 'Loại là bắt buộc' }}
                   render={({ field }) => (
-                    <CustomTextField
+                    <Select
                       {...field}
-                      type='number'
-                      placeholder='Nhập loại câu hỏi'
+                      value={field.value}
+                      onChange={e => field.onChange(e.target.value)}
                       error={!!errors.type}
-                      helperText={errors.type?.message}
-                    />
+                      displayEmpty
+                    >
+                      <MenuItem value={1}>1 đáp án</MenuItem>
+                      <MenuItem value={2}>Nhiều đáp án</MenuItem>
+                    </Select>
                   )}
                 />
+                {errors.type && (
+                  <span style={{ color: 'red', fontSize: '0.75rem', marginTop: '4px' }}>{errors.type.message}</span>
+                )}
               </Grid>
               <Grid size={{ xs: 12 }} className='flex flex-col'>
                 <CustomInputLabel required>Môn học liên quan</CustomInputLabel>

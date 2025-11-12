@@ -15,6 +15,7 @@ import DialogActions from '@mui/material/DialogActions'
 
 import clsx from 'clsx'
 import { Edit2, Eye, Trash } from 'iconsax-react'
+import { BookOpen } from 'lucide-react'
 import { toast } from 'react-toastify'
 
 import { fetchApi } from '@/libs/fetchApi'
@@ -309,47 +310,60 @@ export default function Exercises({ data }: any) {
               </tr>
             </thead>
             <tbody>
-              {classQuizzes.map((classQuiz, index) => {
-                const key = classQuiz.id || `class-quiz-${index}`
+              {classQuizzes && classQuizzes.length > 0 ? (
+                classQuizzes.map((classQuiz, index) => {
+                  const key = classQuiz.id || `class-quiz-${index}`
 
-                return (
-                  <tr key={key} className='border-t border-grey-200 hover:bg-grey-100'>
-                    <td className='px-3 py-4 text-center'>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                    <td className='action px-3 py-3'>
-                      <div className='flex items-center justify-center gap-2'>
-                        <CustomIconButton
-                          size='small'
-                          onClick={() => {
-                            setSelectedQuizId(classQuiz.quiz_id)
-                            setShowQuizDetailModal(true)
-                          }}
-                        >
-                          <Eye size={18} color='#000' />
-                        </CustomIconButton>
-                        <CustomIconButton
-                          size='small'
-                          color='primary'
-                          onClick={() => {
-                            setSelectedEditQuizId(classQuiz.quiz_id)
-                            setShowEditQuizModal(true)
-                          }}
-                        >
-                          <Edit2 size={18} color='#000' />
-                        </CustomIconButton>
-                        <CustomIconButton size='small' onClick={() => handleDeleteClick(classQuiz)}>
-                          <Trash size={18} color='#ED0909' />
-                        </CustomIconButton>
-                      </div>
-                    </td>
-                    <td className='px-3 py-4 text-center'>{classQuiz.quiz?.name || 'N/A'}</td>
-                    <td className='px-3 py-4 text-center'>{new Date(classQuiz.start_time).toLocaleString('vi-VN')}</td>
-                    <td className='px-3 py-4 text-center'>{new Date(classQuiz.end_time).toLocaleString('vi-VN')}</td>
-                    <td className='px-3 py-4 text-center'>
-                      {new Date(classQuiz.quiz?.created_at).toLocaleDateString('vi-VN')}
-                    </td>
-                  </tr>
-                )
-              })}
+                  return (
+                    <tr key={key} className='border-t border-grey-200 hover:bg-grey-100'>
+                      <td className='px-3 py-4 text-center'>{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                      <td className='action px-3 py-3'>
+                        <div className='flex items-center justify-center gap-2'>
+                          <CustomIconButton
+                            size='small'
+                            onClick={() => {
+                              setSelectedQuizId(classQuiz.quiz_id)
+                              setShowQuizDetailModal(true)
+                            }}
+                          >
+                            <Eye size={18} color='#000' />
+                          </CustomIconButton>
+                          <CustomIconButton
+                            size='small'
+                            color='primary'
+                            onClick={() => {
+                              setSelectedEditQuizId(classQuiz.quiz_id)
+                              setShowEditQuizModal(true)
+                            }}
+                          >
+                            <Edit2 size={18} color='#000' />
+                          </CustomIconButton>
+                          <CustomIconButton size='small' onClick={() => handleDeleteClick(classQuiz)}>
+                            <Trash size={18} color='#ED0909' />
+                          </CustomIconButton>
+                        </div>
+                      </td>
+                      <td className='px-3 py-4 text-center'>{classQuiz.quiz?.name || 'N/A'}</td>
+                      <td className='px-3 py-4 text-center'>
+                        {new Date(classQuiz.start_time).toLocaleString('vi-VN')}
+                      </td>
+                      <td className='px-3 py-4 text-center'>{new Date(classQuiz.end_time).toLocaleString('vi-VN')}</td>
+                      <td className='px-3 py-4 text-center'>
+                        {new Date(classQuiz.quiz?.created_at).toLocaleDateString('vi-VN')}
+                      </td>
+                    </tr>
+                  )
+                })
+              ) : (
+                <tr>
+                  <td colSpan={TABLE_HEAD.length}>
+                    <div className='flex h-28 select-none items-center justify-center flex-col gap-2'>
+                      <BookOpen size={48} className='text-grey-200' />
+                      <span className='text-4.5xl text-grey-100'>Không có bài tập nào</span>
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

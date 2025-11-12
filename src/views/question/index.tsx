@@ -13,6 +13,7 @@ import MenuItem from '@mui/material/MenuItem'
 import clsx from 'clsx'
 
 import { Edit2, Eye, Trash } from 'iconsax-react'
+import { FileQuestion } from 'lucide-react'
 
 import { Button } from '@mui/material'
 
@@ -366,8 +367,9 @@ export default function QuestionView() {
                 ) : (
                   <tr>
                     <td colSpan={100}>
-                      <div className='flex h-28 select-none items-center justify-center text-4.5xl font-semibold text-grey-100'>
-                        Không có câu hỏi nào
+                      <div className='flex h-28 select-none items-center justify-center flex-col gap-2'>
+                        <FileQuestion size={48} className='text-grey-200' />
+                        <span className='text-4.5xl text-grey-100'>Không có câu hỏi nào</span>
                       </div>
                     </td>
                   </tr>
@@ -393,7 +395,7 @@ export default function QuestionView() {
         open={isModalEditQuestionOpen}
         setOpen={open => {
           setIsModalEditQuestionOpen(open)
-          
+
           if (!open) {
             setSelectedEditQuestionId(null)
           }

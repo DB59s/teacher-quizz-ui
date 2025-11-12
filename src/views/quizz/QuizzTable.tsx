@@ -10,6 +10,7 @@ import MenuItem from '@mui/material/MenuItem'
 import clsx from 'clsx'
 
 import { Edit2, Eye, Trash } from 'iconsax-react'
+import { Inbox } from 'lucide-react'
 import { toast } from 'react-toastify'
 
 import { useQueryParams } from '@/hooks/useQueryParams'
@@ -183,48 +184,59 @@ export default function QuizzTable() {
             </tr>
           </thead>
           <tbody>
-            {quizzes.map((quiz: any, index: number) => {
-              const key = quiz.id || quiz._id || `quiz-${index}`
+            {quizzes && quizzes.length > 0 ? (
+              quizzes.map((quiz: any, index: number) => {
+                const key = quiz.id || quiz._id || `quiz-${index}`
 
-              return (
-                <tr key={key} className='border-t border-grey-200 hover:bg-grey-100'>
-                  <td className='px-3 py-4 text-center'>{index + 1}</td>
-                  <td className='action px-3 py-3'>
-                    <div className='flex items-center justify-center gap-2'>
-                      <CustomIconButton
-                        size='small'
-                        onClick={() => {
-                          setSelectedQuizId(quiz.id || quiz._id)
-                          setShowQuizDetailModal(true)
-                        }}
-                      >
-                        <Eye size={18} color='#000' />
-                      </CustomIconButton>
+                return (
+                  <tr key={key} className='border-t border-grey-200 hover:bg-grey-100'>
+                    <td className='px-3 py-4 text-center'>{index + 1}</td>
+                    <td className='action px-3 py-3'>
+                      <div className='flex items-center justify-center gap-2'>
+                        <CustomIconButton
+                          size='small'
+                          onClick={() => {
+                            setSelectedQuizId(quiz.id || quiz._id)
+                            setShowQuizDetailModal(true)
+                          }}
+                        >
+                          <Eye size={18} color='#000' />
+                        </CustomIconButton>
 
-                      <CustomIconButton
-                        size='small'
-                        color='primary'
-                        onClick={() => {
-                          setSelectedEditQuizId(quiz.id || quiz._id)
-                          setShowEditQuizModal(true)
-                        }}
-                      >
-                        <Edit2 size={18} color='#000' />
-                      </CustomIconButton>
+                        <CustomIconButton
+                          size='small'
+                          color='primary'
+                          onClick={() => {
+                            setSelectedEditQuizId(quiz.id || quiz._id)
+                            setShowEditQuizModal(true)
+                          }}
+                        >
+                          <Edit2 size={18} color='#000' />
+                        </CustomIconButton>
 
-                      <CustomIconButton size='small' onClick={handleDeleteQuiz(quiz)}>
-                        <Trash size={18} color='#ED0909' />
-                      </CustomIconButton>
-                    </div>
-                  </td>
-                  <td className='px-3 py-4 text-center'>{quiz.name}</td>
-                  <td className='px-3 py-4 text-center'>10</td>
-                  <td className='px-3 py-4 text-center'>30 phút</td>
-                  <td className='px-3 py-4 text-center'>{new Date(quiz.created_at).toLocaleDateString('vi-VN')}</td>
-                  <td className='px-3 py-4 text-center'>{new Date(quiz.updated_at).toLocaleDateString('vi-VN')}</td>
-                </tr>
-              )
-            })}
+                        <CustomIconButton size='small' onClick={handleDeleteQuiz(quiz)}>
+                          <Trash size={18} color='#ED0909' />
+                        </CustomIconButton>
+                      </div>
+                    </td>
+                    <td className='px-3 py-4 text-center'>{quiz.name}</td>
+                    <td className='px-3 py-4 text-center'>10</td>
+                    <td className='px-3 py-4 text-center'>30 phút</td>
+                    <td className='px-3 py-4 text-center'>{new Date(quiz.created_at).toLocaleDateString('vi-VN')}</td>
+                    <td className='px-3 py-4 text-center'>{new Date(quiz.updated_at).toLocaleDateString('vi-VN')}</td>
+                  </tr>
+                )
+              })
+            ) : (
+              <tr>
+                <td colSpan={100}>
+                  <div className='flex h-28 select-none items-center justify-center flex-col gap-2'>
+                    <Inbox size={48} className='text-grey-200' />
+                    <span className='text-4.5xl text-grey-100'>Không có dữ liệu</span>
+                  </div>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
