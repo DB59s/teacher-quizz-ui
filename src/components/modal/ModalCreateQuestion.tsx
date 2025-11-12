@@ -33,7 +33,6 @@ import MenuItem from '@mui/material/MenuItem'
 import Checkbox from '@mui/material/Checkbox'
 import ListItemText from '@mui/material/ListItemText'
 import Typography from '@mui/material/Typography'
-import Divider from '@mui/material/Divider'
 import { useForm, Controller, useFieldArray } from 'react-hook-form'
 
 import { toast } from 'react-toastify'
@@ -296,24 +295,46 @@ export default function ModalCreateQuestion({ type, open, setOpen, questionId }:
                           .join(', ')
                       }
                       error={!!errors.subject_ids}
+                      MenuProps={{
+                        PaperProps: {
+                          sx: {
+                            maxHeight: 300,
+                            maxWidth: 400
+                          }
+                        },
+                        anchorOrigin: {
+                          vertical: 'bottom',
+                          horizontal: 'left'
+                        },
+                        transformOrigin: {
+                          vertical: 'top',
+                          horizontal: 'left'
+                        }
+                      }}
                     >
+                      <MenuItem
+                        onClick={() => setSubjectSelectOpen(false)}
+                        sx={{
+                          justifyContent: 'flex-end',
+                          position: 'sticky',
+                          top: 0,
+                          backgroundColor: 'background.paper',
+                          zIndex: 1,
+                          borderBottom: '1px solid',
+                          borderColor: 'divider',
+                          '&:hover': {
+                            backgroundColor: 'action.hover'
+                          }
+                        }}
+                      >
+                        <i className='tabler-x' style={{ fontSize: '20px' }} />
+                      </MenuItem>
                       {subjects.map(sub => (
                         <MenuItem key={sub.id} value={sub.id}>
                           <Checkbox checked={field.value.includes(sub.id)} />
                           <ListItemText primary={sub.name} />
                         </MenuItem>
                       ))}
-                      <Divider />
-                      <MenuItem
-                        onClick={() => setSubjectSelectOpen(false)}
-                        sx={{
-                          justifyContent: 'center',
-                          fontWeight: 'bold',
-                          color: 'primary.main'
-                        }}
-                      >
-                        Đóng
-                      </MenuItem>
                     </Select>
                   )}
                 />
