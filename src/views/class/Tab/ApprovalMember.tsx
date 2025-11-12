@@ -5,13 +5,12 @@ import Card from '@mui/material/Card'
 import clsx from 'clsx'
 
 import MenuItem from '@mui/material/MenuItem'
+import { Clock } from 'lucide-react'
 
 import useTableHead from '@/hooks/useTableHead'
 import { getClassStudents, approveStudent, rejectStudent } from '@/services/class.service'
 
 import PageLoading from '@/theme/PageLoading'
-
-
 
 import CustomTextField from '@/@core/components/mui/TextField'
 import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
@@ -35,9 +34,9 @@ export default function ApprovalMember(data: any) {
       const pendingStudents = list.filter((student: any) => student.status === 'pending')
 
       setStudents(pendingStudents)
-      
+
       // Reset về trang 1 khi dữ liệu thay đổi
-      
+
       setCurrentPage(1)
     } catch (error) {
       console.error(error)
@@ -130,8 +129,11 @@ export default function ApprovalMember(data: any) {
           <tbody>
             {students.length === 0 ? (
               <tr>
-                <td colSpan={TABLE_HEAD()?.length} className='p-4 text-center text-gray-500'>
-                  Không có học sinh chờ phê duyệt
+                <td colSpan={TABLE_HEAD()?.length}>
+                  <div className='flex h-28 select-none items-center justify-center flex-col gap-2'>
+                    <Clock size={48} className='text-grey-200' />
+                    <span className='text-4.5xl text-grey-100'>Không có học sinh chờ phê duyệt</span>
+                  </div>
                 </td>
               </tr>
             ) : (

@@ -5,12 +5,12 @@ import Card from '@mui/material/Card'
 import clsx from 'clsx'
 
 import MenuItem from '@mui/material/MenuItem'
+import { Users } from 'lucide-react'
 
 import useTableHead from '@/hooks/useTableHead'
 import { getClassStudents, removeStudentFromClass } from '@/services/class.service'
 
 import PageLoading from '@/theme/PageLoading'
-
 
 import CustomTextField from '@/@core/components/mui/TextField'
 import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
@@ -28,7 +28,7 @@ export default function Members(data: any) {
 
     try {
       const list = await getClassStudents(_id)
-      
+
       setStudents(list)
       setCurrentPage(1)
     } catch (error) {
@@ -109,8 +109,11 @@ export default function Members(data: any) {
           <tbody>
             {students.length === 0 ? (
               <tr>
-                <td colSpan={TABLE_HEAD()?.length} className='p-4 text-center text-gray-500'>
-                  Chưa có học sinh
+                <td colSpan={TABLE_HEAD()?.length}>
+                  <div className='flex h-28 select-none items-center justify-center flex-col gap-2'>
+                    <Users size={48} className='text-grey-200' />
+                    <span className='text-4.5xl text-grey-100'>Chưa có học sinh</span>
+                  </div>
                 </td>
               </tr>
             ) : (
