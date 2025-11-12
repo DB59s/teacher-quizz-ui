@@ -8,12 +8,17 @@ import useTableHead from '@/hooks/useTableHead'
 import { getClassStudents, removeStudentFromClass } from '@/services/class.service'
 
 import PageLoading from '@/theme/PageLoading'
+import MenuItem from '@mui/material/MenuItem'
+import CustomTextField from '@/@core/components/mui/TextField'
+import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
 
 export default function Members(data: any) {
   const [loading, setLoading] = useState(false)
   const { _id } = data.data
   const [students, setStudents] = useState<any[]>([])
   const TABLE_HEAD = useTableHead()
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
   const fetchClassDetails = useCallback(async () => {
     setLoading(true)
@@ -22,6 +27,7 @@ export default function Members(data: any) {
       const list = await getClassStudents(_id)
       
       setStudents(list)
+      setCurrentPage(1)
     } catch (error) {
       console.error(error)
     } finally {
@@ -34,6 +40,19 @@ export default function Members(data: any) {
   }, [fetchClassDetails])
 
   console.log('Students:', students)
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handleLimitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setItemsPerPage(parseInt(e.target.value))
+    setCurrentPage(1)
+  }
+
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const displayedStudents = students.slice(startIndex, endIndex)
 
   const handleRemove = async (registrationId: string) => {
     setLoading(true)
@@ -51,6 +70,20 @@ export default function Members(data: any) {
   return (
     <Card>
       <PageLoading show={loading} />
+      <div className='flex flex-col lg:flex-row flex-wrap justify-between gap-3 p-6'>
+        <div className='flex flex-wrap items-center max-sm:flex-col gap-3 max-sm:is-full is-auto'>
+          <CustomTextField
+            select
+            value={itemsPerPage.toString()}
+            onChange={handleLimitChange}
+            className='flex-auto is-[70px]'
+          >
+            <MenuItem value='10'>10</MenuItem>
+            <MenuItem value='25'>25</MenuItem>
+            <MenuItem value='50'>50</MenuItem>
+          </CustomTextField>
+        </div>
+      </div>
       <div className='overflow-x-auto w-full'>
         <table className='w-full min-w-max table-auto text-left text-sm border-spacing-0'>
           <thead>
@@ -78,9 +111,9 @@ export default function Members(data: any) {
                 </td>
               </tr>
             ) : (
-              students.map((student, index) => (
+              displayedStudents.map((student, index) => (
                 <tr key={student.student_id}>
-                  <td className='px-3 py-3 text-center'>{index + 1}</td>
+                  <td className='px-3 py-3 text-center'>{startIndex + index + 1}</td>
                   <td className='px-3 py-3 text-center'>{student.student.full_name}</td>
                   <td className='px-3 py-3 text-center'>{student.student.student_code}</td>
                   <td className='px-3 py-3 text-center'>{student.student.email}</td>
@@ -102,6 +135,16 @@ export default function Members(data: any) {
           </tbody>
         </table>
       </div>
+      {students.length > 0 && (
+        <TableRCPaginationCustom
+          pagination={{
+            page: currentPage,
+            limit: itemsPerPage,
+            totalItems: students.length
+          }}
+          onChangePage={handlePageChange}
+        />
+      )}
     </Card>
   )
 }
