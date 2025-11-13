@@ -97,6 +97,7 @@ export default function QuestionSelector({ selectedQuestions, onSelectionChange 
     try {
       if (skipNextFetchRef.current) {
         skipNextFetchRef.current = false
+
         return
       }
 
@@ -231,8 +232,10 @@ export default function QuestionSelector({ selectedQuestions, onSelectionChange 
             value={subjects.filter(subject => selectedSubjectIds.includes(subject.id))}
             onChange={(_, newValue) => {
               const newIds = newValue.map(subject => subject.id)
+
               setSelectedSubjectIds(newIds)
               selectedSubjectIdsRef.current = newIds
+
               if (page !== 1) {
                 skipNextFetchRef.current = true
                 setPage(1)
@@ -241,11 +244,13 @@ export default function QuestionSelector({ selectedQuestions, onSelectionChange 
             renderTags={(value, getTagProps) =>
               value.map((option, index) => {
                 const { key, ...tagProps } = getTagProps({ index })
-                return <Chip key={option.id} label={option.name} {...tagProps} size='small' />
+
+                return <Chip key={key ?? option.id} label={option.name} {...tagProps} size='small' />
               })
             }
             renderOption={(props, option, { selected }) => {
               const { key, ...optionProps } = props
+
               return (
                 <li key={key} {...optionProps}>
                   <Checkbox checked={selected} />

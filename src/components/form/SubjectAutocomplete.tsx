@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Controller, Control, FieldErrors } from 'react-hook-form'
+
+import { Controller, type Control, type FieldErrors } from 'react-hook-form'
 
 import Autocomplete from '@mui/material/Autocomplete'
 import Checkbox from '@mui/material/Checkbox'
@@ -88,11 +89,13 @@ export default function SubjectAutocomplete({
             renderTags={(value, getTagProps) =>
               value.map((option, index) => {
                 const { key, ...tagProps } = getTagProps({ index })
-                return <Chip key={option.id} label={option.name} {...tagProps} size='small' />
+
+                return <Chip key={key ?? option.id} label={option.name} {...tagProps} size='small' />
               })
             }
             renderOption={(props, option, { selected }) => {
               const { key, ...optionProps } = props
+
               return (
                 <li key={key} {...optionProps}>
                   <Checkbox checked={selected} />

@@ -19,9 +19,6 @@ import Stack from '@mui/material/Stack'
 
 import { toast } from 'react-toastify'
 
-
-
-
 import { updateClass, deleteClass, type UpdateClassPayload } from '@/services/class.service'
 
 interface UpdateClassModalProps {
@@ -60,7 +57,7 @@ export default function UpdateClassModal({ open, onClose, classData }: UpdateCla
 
     if (!formData.description.trim()) {
       toast.error('Mô tả không được để trống')
-      
+
       return
     }
 
@@ -69,7 +66,20 @@ export default function UpdateClassModal({ open, onClose, classData }: UpdateCla
       await updateClass(classData.id, formData)
       toast.success('Cập nhật lớp học thành công')
       onClose()
-      router.refresh()
+      
+      // Refresh data to reflect latest class info
+      
+      try {
+        router.refresh()
+      } catch (e) {
+
+      }
+      
+      // Ensure hard reload in case soft refresh doesn't bust caches
+
+      if (typeof window !== 'undefined') {
+        window.location.reload()
+      }
     } catch (error: any) {
       toast.error(error.message || 'Cập nhật lớp học thất bại')
     } finally {

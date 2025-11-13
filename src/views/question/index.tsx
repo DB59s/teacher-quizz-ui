@@ -77,10 +77,13 @@ export default function QuestionView() {
 
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([])
   const [loadingSubjects, setLoadingSubjects] = useState(false)
+
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>(() =>
     currentSearchParams.subject_id ? currentSearchParams.subject_id.split(',').filter(Boolean) : []
   )
+
   const [selectedLevel, setSelectedLevel] = useState<string>(currentSearchParams.level || '')
+
   const [searchTerm, setSearchTerm] = useState<string>(currentSearchParams.search || '')
 
   const fetchQuestions = useCallback(async () => {
@@ -174,6 +177,7 @@ export default function QuestionView() {
 
   const handleLevelChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newLevel = e.target.value
+
     setSelectedLevel(newLevel)
   }
 
@@ -276,16 +280,20 @@ export default function QuestionView() {
                 value={subjects.filter(subject => selectedSubjectIds.includes(subject.id))}
                 onChange={(_, newValue) => {
                   const newIds = newValue.map(subject => subject.id)
+
                   setSelectedSubjectIds(newIds)
                 }}
                 renderTags={(value, getTagProps) =>
                   value.map((option, index) => {
                     const { key, ...tagProps } = getTagProps({ index })
-                    return <Chip key={option.id} label={option.name} {...tagProps} size='small' />
+                    
+                    return <Chip key={key} label={option.name} {...tagProps} size='small' />
+                    
                   })
                 }
                 renderOption={(props, option, { selected }) => {
                   const { key, ...optionProps } = props
+
                   return (
                     <li key={key} {...optionProps}>
                       <Checkbox checked={selected} />

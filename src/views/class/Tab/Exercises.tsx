@@ -88,7 +88,6 @@ export default function Exercises({ data }: any) {
   // States for quiz detail modal
   const [showQuizDetailModal, setShowQuizDetailModal] = useState(false)
   const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null)
-  const [classQuizDetail, setClassQuizDetail] = useState<any>(null)
   const [loadingClassQuizDetail, setLoadingClassQuizDetail] = useState(false)
 
   // States for edit class quiz modal
@@ -217,8 +216,8 @@ export default function Exercises({ data }: any) {
     setSelectedQuizId(quizId)
 
     try {
-      const data = await getClassQuizDetail(classQuizId)
-      setClassQuizDetail(data)
+      await getClassQuizDetail(classQuizId)
+
       setShowQuizDetailModal(true)
     } catch (error: any) {
       console.error('Error fetching class quiz details:', error)

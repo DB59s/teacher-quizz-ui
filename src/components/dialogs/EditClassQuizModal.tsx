@@ -13,7 +13,6 @@ import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
-import Chip from '@mui/material/Chip'
 import Divider from '@mui/material/Divider'
 import TextField from '@mui/material/TextField'
 
@@ -66,9 +65,12 @@ const EditClassQuizModal = ({ open, onClose, classQuizId, onUpdateSuccess }: Edi
       const data = await getClassQuizDetail(classQuizId)
 
       setClassQuizDetail(data)
+      
       // Convert ISO strings to datetime-local format
       const startTimeLocal = new Date(data.start_time).toISOString().slice(0, 16)
+      
       const endTimeLocal = new Date(data.end_time).toISOString().slice(0, 16)
+      
       setStartTime(startTimeLocal)
       setEndTime(endTimeLocal)
     } catch (err) {
@@ -89,6 +91,7 @@ const EditClassQuizModal = ({ open, onClose, classQuizId, onUpdateSuccess }: Edi
     // Validate end time is after start time
     const startDate = new Date(startTime)
     const endDate = new Date(endTime)
+
     if (endDate <= startDate) {
       toast.error('Thời gian kết thúc phải sau thời gian bắt đầu', { position: 'bottom-right' })
 
