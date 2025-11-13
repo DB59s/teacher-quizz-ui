@@ -91,14 +91,15 @@ const responseErrorInterceptor = async (error: any) => {
     console.log('Token expired or invalid, handling authentication...')
 
     if (!isServer) {
-      // Client-side: sign out using next-auth
+      // Client-side only: sign out using next-auth
+      // Server-side redirects should be handled by individual API functions
       await signOut({
         callbackUrl: '/login',
         redirect: true
       })
     }
-
-    // Server-side handling will be done in the main api function
+    // For server-side 401: let the caller handle the redirect
+    // This prevents conflicts with component-level error handling
   }
 
   // Handle 403 Forbidden
@@ -170,17 +171,3 @@ export const clearAuthState = async () => {
   }
 }
 
-// Utility function to refresh session
-export const refreshSessionToken = async () => {
-  if (!isServer) {
-    // Trigger session refresh
-    const event = new Event('visibilitychange')
-
-    document.dispatchEvent(event)
-
-    // Get fresh session
-    return await getSession()
-  }
-
-  return null
-}

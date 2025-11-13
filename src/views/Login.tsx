@@ -19,7 +19,7 @@ import FormControlLabel from '@mui/material/FormControlLabel'
 import Divider from '@mui/material/Divider'
 
 // Third-party Imports
-import { signIn, useSession } from 'next-auth/react'
+import { signIn } from 'next-auth/react'
 import { Controller, useForm } from 'react-hook-form'
 import { valibotResolver } from '@hookform/resolvers/valibot'
 import { email, object, minLength, string, pipe, nonEmpty } from 'valibot'
@@ -93,19 +93,15 @@ const Login = ({ mode }: { mode: SystemMode }) => {
   // Hooks
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { data: session, status } = useSession()
 
   const { settings } = useSettings()
   const theme = useTheme()
   const hidden = useMediaQuery(theme.breakpoints.down('md'))
   const authBackground = useImageVariant(mode, lightImg, darkImg)
 
-  // Redirect to dashboard if already authenticated
-  useEffect(() => {
-    if (status === 'authenticated' && session) {
-      router.replace('/dashboards/teacher')
-    }
-  }, [status, session, router])
+  // NOTE: Session checking is handled by GuestOnlyRoute HOC on server-side
+  // No need to check on client-side to avoid conflicts with auth validation
+  // If user is authenticated, GuestOnlyRoute will redirect to dashboard before this component renders
 
   const {
     control,
