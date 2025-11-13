@@ -1,6 +1,9 @@
 // Third-party Imports
-import { getServerSession } from 'next-auth'
+
 import { redirect } from 'next/navigation'
+
+import { getServerSession } from 'next-auth'
+
 
 // Type Imports
 import type { ChildrenType } from '@core/types'
@@ -12,7 +15,9 @@ import { authOptions } from '@/libs/auth'
 function isTokenExpired(token: string): boolean {
   try {
     // JWT format: header.payload.signature
+    
     const parts = token.split('.')
+    
     if (parts.length !== 3) return true
 
     const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString())
@@ -20,8 +25,10 @@ function isTokenExpired(token: string): boolean {
     const currentTime = Date.now()
 
     return currentTime > expirationTime
+
   } catch (error) {
     console.error('Error checking token expiration:', error)
+
     return true // Assume expired if can't decode
   }
 }
@@ -51,5 +58,6 @@ export default async function AuthGuard({ children }: ChildrenType) {
   }
 
   console.log('[AuthGuard] Session valid, allowing access to protected route')
+
   return <>{children}</>
 }

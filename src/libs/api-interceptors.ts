@@ -98,6 +98,7 @@ const responseErrorInterceptor = async (error: any) => {
         redirect: true
       })
     }
+    
     // For server-side 401: let the caller handle the redirect
     // This prevents conflicts with component-level error handling
   }

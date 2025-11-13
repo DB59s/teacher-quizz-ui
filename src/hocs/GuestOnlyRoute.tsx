@@ -18,6 +18,7 @@ function isTokenExpired(token: string): boolean {
   try {
     // JWT format: header.payload.signature
     const parts = token.split('.')
+    
     if (parts.length !== 3) return true
 
     const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString())
@@ -25,8 +26,10 @@ function isTokenExpired(token: string): boolean {
     const currentTime = Date.now()
 
     return currentTime > expirationTime
+
   } catch (error) {
     console.error('Error checking token expiration:', error)
+    
     return true // Assume expired if can't decode
   }
 }
@@ -37,11 +40,13 @@ const GuestOnlyRoute = async ({ children }: ChildrenType) => {
 
   if (!session) {
     console.log('[GuestOnlyRoute] No session, allowing access to login page')
+
     return <>{children}</>
   }
 
   if (!session.accessToken) {
     console.log('[GuestOnlyRoute] Session exists but no accessToken, allowing access to login page')
+
     return <>{children}</>
   }
 
@@ -49,6 +54,7 @@ const GuestOnlyRoute = async ({ children }: ChildrenType) => {
 
   if (tokenExpired) {
     console.log('[GuestOnlyRoute] AccessToken is expired, allowing access to login page')
+
     return <>{children}</>
   }
 
