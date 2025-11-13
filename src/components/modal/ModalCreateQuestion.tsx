@@ -30,8 +30,6 @@ import DialogActions from '@mui/material/DialogActions'
 import Button from '@mui/material/Button'
 import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
-import Checkbox from '@mui/material/Checkbox'
-import ListItemText from '@mui/material/ListItemText'
 import Typography from '@mui/material/Typography'
 import { useForm, Controller, useFieldArray } from 'react-hook-form'
 
@@ -41,6 +39,7 @@ import { toast } from 'react-toastify'
 import CustomTextField from '@/@core/components/mui/TextField'
 import CustomInputLabel from '../form/CustomInputLabel'
 import DialogCloseButton from '../dialogs/DialogCloseButton'
+import SubjectAutocomplete from '../form/SubjectAutocomplete'
 import { fetchApi } from '@/libs/fetchApi'
 
 export default function ModalCreateQuestion({ type, open, setOpen, questionId }: ModalCreateQuestionProps) {
@@ -59,33 +58,10 @@ export default function ModalCreateQuestion({ type, open, setOpen, questionId }:
     }
   })
 
-  const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([])
-  const [loadingSubjects, setLoadingSubjects] = useState(false)
-  const [errorSubjects, setErrorSubjects] = useState('')
   const [loadingQuestion, setLoadingQuestion] = useState(false)
-  const [subjectSelectOpen, setSubjectSelectOpen] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
   const isQuestionPath = /question/.test(pathname || '')
-
-  useEffect(() => {
-    setLoadingSubjects(true)
-    fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/subjects?page=1&limit=100`, { method: 'GET' })
-      .then(res => {
-        if (!res.ok) throw new Error('Không lấy được danh sách môn học')
-
-        return res.json()
-      })
-      .then(json => {
-        setSubjects(json?.data || [])
-      })
-      .catch(err => {
-        setErrorSubjects(err.message || 'Lỗi không xác định')
-      })
-      .finally(() => {
-        setLoadingSubjects(false)
-      })
-  }, [])
 
   // Fetch question data when editing
   useEffect(() => {
@@ -271,76 +247,14 @@ export default function ModalCreateQuestion({ type, open, setOpen, questionId }:
                   <span style={{ color: 'red', fontSize: '0.75rem', marginTop: '4px' }}>{errors.type.message}</span>
                 )}
               </Grid>
-              <Grid size={{ xs: 12 }} className='flex flex-col'>
-                <CustomInputLabel required>Môn học liên quan</CustomInputLabel>
-                <Controller
-                  name='subject_ids'
+              <Grid size={{ xs: 12 }}>
+                <SubjectAutocomplete
                   control={control}
-                  rules={{
-                    validate: v => (v && v.length > 0) || 'Chọn ít nhất một môn học'
-                  }}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      multiple
-                      open={subjectSelectOpen}
-                      onOpen={() => setSubjectSelectOpen(true)}
-                      onClose={() => setSubjectSelectOpen(false)}
-                      value={field.value}
-                      onChange={e => field.onChange(e.target.value)}
-                      renderValue={selected =>
-                        subjects
-                          .filter(sub => selected.includes(sub.id))
-                          .map(sub => sub.name)
-                          .join(', ')
-                      }
-                      error={!!errors.subject_ids}
-                      MenuProps={{
-                        PaperProps: {
-                          sx: {
-                            maxHeight: 300,
-                            maxWidth: 400
-                          }
-                        },
-                        anchorOrigin: {
-                          vertical: 'bottom',
-                          horizontal: 'left'
-                        },
-                        transformOrigin: {
-                          vertical: 'top',
-                          horizontal: 'left'
-                        }
-                      }}
-                    >
-                      <MenuItem
-                        onClick={() => setSubjectSelectOpen(false)}
-                        sx={{
-                          justifyContent: 'flex-end',
-                          position: 'sticky',
-                          top: 0,
-                          backgroundColor: 'background.paper',
-                          zIndex: 1,
-                          borderBottom: '1px solid',
-                          borderColor: 'divider',
-                          '&:hover': {
-                            backgroundColor: 'action.hover'
-                          }
-                        }}
-                      >
-                        <i className='tabler-x' style={{ fontSize: '20px' }} />
-                      </MenuItem>
-                      {subjects.map(sub => (
-                        <MenuItem key={sub.id} value={sub.id}>
-                          <Checkbox checked={field.value.includes(sub.id)} />
-                          <ListItemText primary={sub.name} />
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  )}
+                  name='subject_ids'
+                  errors={errors}
+                  required
+                  label='Môn học liên quan'
                 />
-                {loadingSubjects && <span>Đang tải danh sách môn học...</span>}
-                {errorSubjects && <span style={{ color: 'red' }}>{errorSubjects}</span>}
-                {errors.subject_ids && <span style={{ color: 'red' }}>{errors.subject_ids.message}</span>}
               </Grid>
               <Grid size={{ xs: 12 }} className='flex flex-col gap-2'>
                 <CustomInputLabel required>Đáp án</CustomInputLabel>
