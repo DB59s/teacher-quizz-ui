@@ -5,7 +5,6 @@ import type { DefaultJWT } from 'next-auth/jwt'
 declare module 'next-auth' {
   interface Session {
     accessToken?: string
-    refreshToken?: string
     user: {
       id: string
       email: string
@@ -22,7 +21,6 @@ declare module 'next-auth' {
     user_id: string
     full_name: string
     accessToken: string
-    refreshToken: string
   }
 }
 
@@ -34,6 +32,5 @@ declare module 'next-auth/jwt' {
     user_id: string
     full_name: string
     accessToken: string
-    refreshToken: string
   }
 }

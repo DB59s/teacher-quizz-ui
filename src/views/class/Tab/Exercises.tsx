@@ -12,6 +12,7 @@ import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
+import TextField from '@mui/material/TextField'
 
 import clsx from 'clsx'
 import { Edit2, Eye, Trash } from 'iconsax-react'
@@ -21,14 +22,13 @@ import { toast } from 'react-toastify'
 import { fetchApi } from '@/libs/fetchApi'
 import PageLoading from '@/theme/PageLoading'
 import CustomIconButton from '@/@core/components/mui/IconButton'
-import CustomTextField from '@/@core/components/mui/TextField'
 import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
 import QuizDetailModal from '@/components/dialogs/QuizDetailModal'
 import EditQuizModal from '@/components/dialogs/EditQuizModal'
 
 // import { deleteQuiz } from '@/services/quiz.service'
 
-import { deleteClassQuiz } from '@/services/classQuizzes.service'
+import { deleteClassQuiz, getClassQuizDetail, updateClassQuiz } from '@/services/classQuizzes.service'
 import useClassQuizzes from '@/hooks/useClassQuizzes'
 
 type Quiz = {
@@ -88,10 +88,15 @@ export default function Exercises({ data }: any) {
   // States for quiz detail modal
   const [showQuizDetailModal, setShowQuizDetailModal] = useState(false)
   const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null)
+  const [loadingClassQuizDetail, setLoadingClassQuizDetail] = useState(false)
 
-  // States for edit quiz modal
+  // States for edit class quiz modal
   const [showEditQuizModal, setShowEditQuizModal] = useState(false)
-  const [selectedEditQuizId, setSelectedEditQuizId] = useState<string | null>(null)
+  const [showTimeDialog, setShowTimeDialog] = useState(false)
+  const [editingClassQuiz, setEditingClassQuiz] = useState<ClassQuiz | null>(null)
+  const [editStartTime, setEditStartTime] = useState('')
+  const [editEndTime, setEditEndTime] = useState('')
+  const [updatingClassQuizTime, setUpdatingClassQuizTime] = useState(false)
 
   // States for delete confirmation
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -205,6 +210,111 @@ export default function Exercises({ data }: any) {
     setCurrentPage(1)
   }
 
+  // Fetch class quiz details
+  const handleViewClassQuiz = async (classQuizId: string, quizId: string) => {
+    setLoadingClassQuizDetail(true)
+    setSelectedQuizId(quizId)
+
+    try {
+      await getClassQuizDetail(classQuizId)
+
+      setShowQuizDetailModal(true)
+    } catch (error: any) {
+      console.error('Error fetching class quiz details:', error)
+      toast.error(error.message || 'Không thể tải chi tiết class quiz', {
+        position: 'bottom-right',
+        autoClose: 3000
+      })
+    } finally {
+      setLoadingClassQuizDetail(false)
+    }
+  }
+
+  // Handle edit class quiz - open modal
+  const handleEditClassQuiz = (classQuiz: ClassQuiz) => {
+    setEditingClassQuiz(classQuiz)
+    setEditStartTime(new Date(classQuiz.start_time).toISOString().slice(0, 16))
+    setEditEndTime(new Date(classQuiz.end_time).toISOString().slice(0, 16))
+    setShowEditQuizModal(true)
+    setShowTimeDialog(false)
+  }
+
+  const handleCloseEditModal = () => {
+    if (updatingClassQuizTime) return
+    setShowEditQuizModal(false)
+    setShowTimeDialog(false)
+    setEditingClassQuiz(null)
+    setEditStartTime('')
+    setEditEndTime('')
+    setUpdatingClassQuizTime(false)
+  }
+
+  const handleOpenTimeDialog = () => {
+    if (!editingClassQuiz) return
+    setShowTimeDialog(true)
+  }
+
+  const handleUpdateQuizTime = async () => {
+    if (!editingClassQuiz || !editStartTime || !editEndTime) {
+      toast.error('Vui lòng nhập đầy đủ thời gian', { position: 'bottom-right' })
+
+      return
+    }
+
+    const startDate = new Date(editStartTime)
+    const endDate = new Date(editEndTime)
+
+    if (endDate <= startDate) {
+      toast.error('Thời gian kết thúc phải sau thời gian bắt đầu', { position: 'bottom-right' })
+
+      return
+    }
+
+    setUpdatingClassQuizTime(true)
+
+    try {
+      const startTimeISO = startDate.toISOString()
+      const endTimeISO = endDate.toISOString()
+
+      await updateClassQuiz(editingClassQuiz.id, {
+        start_time: startTimeISO,
+        end_time: endTimeISO
+      })
+
+      toast.success('Cập nhật thời gian thành công', {
+        position: 'bottom-right',
+        autoClose: 3000
+      })
+
+      setEditingClassQuiz(prev =>
+        prev
+          ? {
+              ...prev,
+              start_time: startTimeISO,
+              end_time: endTimeISO
+            }
+          : prev
+      )
+
+      fetchClassQuizzes()
+      refetchClassQuizzes()
+      setShowTimeDialog(false)
+    } catch (error: any) {
+      toast.error(error.message || 'Có lỗi xảy ra khi cập nhật thời gian', {
+        position: 'bottom-right',
+        autoClose: 3000
+      })
+    } finally {
+      setUpdatingClassQuizTime(false)
+    }
+  }
+
+  // Handle update success callback
+  const handleUpdateSuccess = () => {
+    fetchClassQuizzes()
+    refetchClassQuizzes()
+  }
+
   // Handle delete quiz
   const handleDeleteClick = (classQuiz: ClassQuiz) => {
     setQuizToDelete(classQuiz)
@@ -278,16 +388,17 @@ export default function Exercises({ data }: any) {
 
         <div className='flex flex-col lg:flex-row flex-wrap justify-between gap-3 p-6'>
           <div className='flex flex-wrap items-center max-sm:flex-col gap-3 max-sm:is-full is-auto'>
-            <CustomTextField
+            <TextField
               select
               value={itemsPerPage.toString()}
               onChange={handleLimitChange}
               className='flex-auto is-[70px]'
+              size='small'
             >
               <MenuItem value='10'>10</MenuItem>
               <MenuItem value='25'>25</MenuItem>
               <MenuItem value='50'>50</MenuItem>
-            </CustomTextField>
+            </TextField>
           </div>
         </div>
 
@@ -321,21 +432,12 @@ export default function Exercises({ data }: any) {
                         <div className='flex items-center justify-center gap-2'>
                           <CustomIconButton
                             size='small'
-                            onClick={() => {
-                              setSelectedQuizId(classQuiz.quiz_id)
-                              setShowQuizDetailModal(true)
-                            }}
+                            onClick={() => handleViewClassQuiz(classQuiz.id, classQuiz.quiz_id)}
+                            disabled={loadingClassQuizDetail}
                           >
                             <Eye size={18} color='#000' />
                           </CustomIconButton>
-                          <CustomIconButton
-                            size='small'
-                            color='primary'
-                            onClick={() => {
-                              setSelectedEditQuizId(classQuiz.quiz_id)
-                              setShowEditQuizModal(true)
-                            }}
-                          >
+                          <CustomIconButton size='small' color='primary' onClick={() => handleEditClassQuiz(classQuiz)}>
                             <Edit2 size={18} color='#000' />
                           </CustomIconButton>
                           <CustomIconButton size='small' onClick={() => handleDeleteClick(classQuiz)}>
@@ -427,7 +529,7 @@ export default function Exercises({ data }: any) {
                 <strong>Mô tả:</strong> {selectedQuiz.description}
               </Typography>
 
-              <CustomTextField
+              <TextField
                 fullWidth
                 label='Thời gian bắt đầu'
                 type='datetime-local'
@@ -436,7 +538,7 @@ export default function Exercises({ data }: any) {
                 InputLabelProps={{ shrink: true }}
               />
 
-              <CustomTextField
+              <TextField
                 fullWidth
                 label='Thời gian kết thúc'
                 type='datetime-local'
@@ -468,15 +570,62 @@ export default function Exercises({ data }: any) {
       {/* Edit Quiz Modal */}
       <EditQuizModal
         open={showEditQuizModal}
-        onClose={() => {
-          setShowEditQuizModal(false)
-          setSelectedEditQuizId(null)
-        }}
-        quizId={selectedEditQuizId}
-        onUpdateSuccess={() => {
-          fetchClassQuizzes()
-        }}
+        onClose={handleCloseEditModal}
+        quizId={editingClassQuiz?.quiz_id ?? null}
+        onUpdateSuccess={handleUpdateSuccess}
+        additionalQuestionActions={
+          editingClassQuiz ? (
+            <Button variant='outlined' size='small' onClick={handleOpenTimeDialog} disabled={updatingClassQuizTime}>
+              Cập nhật thời gian
+            </Button>
+          ) : null
+        }
       />
+
+      {/* Time Update Dialog */}
+      <Dialog
+        open={showTimeDialog}
+        onClose={() => !updatingClassQuizTime && setShowTimeDialog(false)}
+        maxWidth='sm'
+        fullWidth
+      >
+        <DialogTitle>Cập nhật thời gian quiz trong lớp</DialogTitle>
+        <DialogContent>
+          <Box className='space-y-4 mt-2'>
+            <TextField
+              fullWidth
+              label='Thời gian bắt đầu'
+              type='datetime-local'
+              value={editStartTime}
+              onChange={e => setEditStartTime(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              disabled={updatingClassQuizTime}
+            />
+
+            <TextField
+              fullWidth
+              label='Thời gian kết thúc'
+              type='datetime-local'
+              value={editEndTime}
+              onChange={e => setEditEndTime(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              disabled={updatingClassQuizTime}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowTimeDialog(false)} disabled={updatingClassQuizTime}>
+            Hủy
+          </Button>
+          <Button
+            variant='contained'
+            onClick={handleUpdateQuizTime}
+            disabled={updatingClassQuizTime || !editStartTime || !editEndTime}
+          >
+            {updatingClassQuizTime ? 'Đang cập nhật...' : 'Lưu'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onClose={() => !deleting && setShowDeleteDialog(false)} maxWidth='sm' fullWidth>

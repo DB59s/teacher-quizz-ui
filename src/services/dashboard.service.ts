@@ -86,9 +86,11 @@ export const getTeacherDashboardServer = async (): Promise<DashboardData> => {
       throw error
     }
 
-    // Handle 401 errors - throw AuthenticationError to be handled by component
+    // Handle 401 errors - token is invalid/expired
     if (error.response?.status === 401) {
-      throw new AuthenticationError('Token expired or invalid')
+      // Return null or throw error to signal invalid session
+      // Component will handle the error and redirect
+      throw new AuthenticationError('Token expired or invalid. Please log in again.')
     }
 
     console.error('Error fetching teacher dashboard:', error)

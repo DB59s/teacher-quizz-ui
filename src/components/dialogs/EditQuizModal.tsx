@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 
 // MUI Imports
 import Dialog from '@mui/material/Dialog'
@@ -28,12 +28,14 @@ import { fetchApi } from '@/libs/fetchApi'
 
 // Component Imports
 import PageLoading from '@/theme/PageLoading'
+import ModalCreateQuestion from '@/components/modal/ModalCreateQuestion'
 
 type EditQuizModalProps = {
   open: boolean
   onClose: () => void
   quizId: string | null
   onUpdateSuccess?: () => void
+  additionalQuestionActions?: ReactNode
 }
 
 type AvailableQuestion = {
@@ -43,7 +45,7 @@ type AvailableQuestion = {
   type: string
 }
 
-const EditQuizModal = ({ open, onClose, quizId, onUpdateSuccess }: EditQuizModalProps) => {
+const EditQuizModal = ({ open, onClose, quizId, onUpdateSuccess, additionalQuestionActions }: EditQuizModalProps) => {
   const [quizDetail, setQuizDetail] = useState<QuizDetail | null>(null)
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -58,6 +60,8 @@ const EditQuizModal = ({ open, onClose, quizId, onUpdateSuccess }: EditQuizModal
   const [availableQuestions, setAvailableQuestions] = useState<AvailableQuestion[]>([])
   const [loadingQuestions, setLoadingQuestions] = useState(false)
   const [showAddQuestionDialog, setShowAddQuestionDialog] = useState(false)
+  const [showEditQuestionModal, setShowEditQuestionModal] = useState(false)
+  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null)
 
   useEffect(() => {
     if (open && quizId) {
@@ -128,6 +132,21 @@ const EditQuizModal = ({ open, onClose, quizId, onUpdateSuccess }: EditQuizModal
     toast.success('Đã xóa câu hỏi', { position: 'bottom-right', autoClose: 2000 })
   }
 
+  const handleOpenEditQuestion = (questionId: string) => {
+    setEditingQuestionId(questionId)
+    setShowEditQuestionModal(true)
+  }
+
+  const handleSetEditQuestionModalOpen = (open: boolean) => {
+    setShowEditQuestionModal(open)
+
+    if (!open) {
+      setEditingQuestionId(null)
+      fetchAvailableQuestions()
+      fetchQuizDetail()
+    }
+  }
+
   const handleSave = async () => {
     if (!quizId || !name.trim()) {
       toast.error('Vui lòng nhập tên quiz', { position: 'bottom-right' })
@@ -173,6 +192,8 @@ const EditQuizModal = ({ open, onClose, quizId, onUpdateSuccess }: EditQuizModal
     return availableQuestions.filter(q => !selectedQuestionIds.includes(q.id))
   }
 
+  const availableQuestionsToAdd = getAvailableQuestionsToAdd()
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth='md' fullWidth>
       <DialogTitle>Chỉnh sửa Quiz</DialogTitle>
@@ -213,14 +234,17 @@ const EditQuizModal = ({ open, onClose, quizId, onUpdateSuccess }: EditQuizModal
             <Box>
               <Box className='flex items-center justify-between mb-3'>
                 <Typography variant='h6'>Danh sách câu hỏi ({selectedQuestionIds.length})</Typography>
-                <Button
-                  variant='outlined'
-                  size='small'
-                  startIcon={<Plus size={18} />}
-                  onClick={() => setShowAddQuestionDialog(true)}
-                >
-                  Thêm câu hỏi
-                </Button>
+                <Box className='flex items-center gap-2'>
+                  {additionalQuestionActions}
+                  <Button
+                    variant='outlined'
+                    size='small'
+                    startIcon={<Plus size={18} />}
+                    onClick={() => setShowAddQuestionDialog(true)}
+                  >
+                    Thêm câu hỏi
+                  </Button>
+                </Box>
               </Box>
 
               {selectedQuestionIds.length > 0 ? (
@@ -239,11 +263,6 @@ const EditQuizModal = ({ open, onClose, quizId, onUpdateSuccess }: EditQuizModal
                                 {question && (
                                   <>
                                     <Chip label={`Độ khó: ${question.level}`} size='small' variant='outlined' />
-                                    <Chip
-                                      label={`Loại: ${question.type === '1' ? 'Trắc nghiệm' : 'Tự luận'}`}
-                                      size='small'
-                                      variant='outlined'
-                                    />
                                   </>
                                 )}
                                 {availableQuestion && !question && (
@@ -274,53 +293,6 @@ const EditQuizModal = ({ open, onClose, quizId, onUpdateSuccess }: EditQuizModal
                 </Typography>
               )}
             </Box>
-
-            {/* Add Question Section */}
-            {showAddQuestionDialog && (
-              <Box className='mt-4 p-4 border rounded'>
-                <Box className='flex items-center justify-between mb-3'>
-                  <Typography variant='h6'>Chọn câu hỏi để thêm</Typography>
-                  <Button size='small' onClick={() => setShowAddQuestionDialog(false)}>
-                    Đóng
-                  </Button>
-                </Box>
-                <PageLoading show={loadingQuestions} />
-                {getAvailableQuestionsToAdd().length > 0 ? (
-                  <Box className='max-h-[300px] overflow-y-auto space-y-2'>
-                    {getAvailableQuestionsToAdd().map(question => (
-                      <Card
-                        key={question.id}
-                        className='cursor-pointer hover:bg-action-hover'
-                        onClick={() => handleAddQuestion(question.id)}
-                      >
-                        <CardContent>
-                          <Box className='flex items-start justify-between'>
-                            <Box className='flex-1'>
-                              <Box className='flex items-center gap-2 mb-2'>
-                                <Chip label={`Độ khó: ${question.level}`} size='small' variant='outlined' />
-                                <Chip
-                                  label={`Loại: ${question.type === '1' ? 'Trắc nghiệm' : 'Tự luận'}`}
-                                  size='small'
-                                  variant='outlined'
-                                />
-                              </Box>
-                              <Typography variant='body1'>{question.content}</Typography>
-                            </Box>
-                            <Button size='small' variant='outlined' className='ml-2'>
-                              Thêm
-                            </Button>
-                          </Box>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </Box>
-                ) : (
-                  <Typography color='text.secondary' className='text-center py-4'>
-                    Không còn câu hỏi nào để thêm
-                  </Typography>
-                )}
-              </Box>
-            )}
           </Box>
         )}
       </DialogContent>
@@ -332,6 +304,76 @@ const EditQuizModal = ({ open, onClose, quizId, onUpdateSuccess }: EditQuizModal
           {saving ? 'Đang lưu...' : 'Lưu'}
         </Button>
       </DialogActions>
+
+      <Dialog open={showAddQuestionDialog} onClose={() => setShowAddQuestionDialog(false)} maxWidth='sm' fullWidth>
+        <DialogTitle>Chọn câu hỏi để thêm</DialogTitle>
+        <DialogContent>
+          <PageLoading show={loadingQuestions} />
+          {!loadingQuestions && (
+            <Box className='space-y-2 mt-2'>
+              {availableQuestionsToAdd.length > 0 ? (
+                <Box className='max-h-[300px] overflow-y-auto space-y-2'>
+                  {availableQuestionsToAdd.map(question => (
+                    <Card
+                      key={question.id}
+                      className='cursor-pointer hover:bg-action-hover'
+                      onClick={() => handleAddQuestion(question.id)}
+                    >
+                      <CardContent>
+                        <Box className='flex items-start justify-between'>
+                          <Box className='flex-1'>
+                            <Box className='flex items-center gap-2 mb-2'>
+                              <Chip label={`Độ khó: ${question.level}`} size='small' variant='outlined' />
+                            </Box>
+                            <Typography variant='body1'>{question.content}</Typography>
+                          </Box>
+                          <Box className='flex items-center gap-2 ml-2'>
+                            <Button
+                              size='small'
+                              variant='outlined'
+                              onClick={event => {
+                                event.stopPropagation()
+                                handleAddQuestion(question.id)
+                              }}
+                            >
+                              Thêm
+                            </Button>
+                            <Button
+                              size='small'
+                              variant='outlined'
+                              color='secondary'
+                              onClick={event => {
+                                event.stopPropagation()
+                                handleOpenEditQuestion(question.id)
+                              }}
+                            >
+                              Sửa
+                            </Button>
+                          </Box>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </Box>
+              ) : (
+                <Typography color='text.secondary' className='text-center py-4'>
+                  Không còn câu hỏi nào để thêm
+                </Typography>
+              )}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowAddQuestionDialog(false)}>Đóng</Button>
+        </DialogActions>
+      </Dialog>
+
+      <ModalCreateQuestion
+        type='edit'
+        open={showEditQuestionModal}
+        setOpen={handleSetEditQuestionModalOpen}
+        questionId={editingQuestionId}
+      />
     </Dialog>
   )
 }

@@ -145,7 +145,6 @@ export default function QuizzTable() {
     }
   }
 
-  console.log('Quizzes:', quizzes)
 
   return (
     <Card>

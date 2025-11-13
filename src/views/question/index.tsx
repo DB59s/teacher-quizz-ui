@@ -9,6 +9,10 @@ import Grid from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
 import Card from '@mui/material/Card'
 import MenuItem from '@mui/material/MenuItem'
+import Autocomplete from '@mui/material/Autocomplete'
+import Checkbox from '@mui/material/Checkbox'
+import Chip from '@mui/material/Chip'
+import ListItemText from '@mui/material/ListItemText'
 
 import clsx from 'clsx'
 
@@ -44,9 +48,6 @@ export default function QuestionView() {
   const [paginationData, setPaginationData] = useState<PaginationData>(null)
   const searchParams = useSearchParams()
 
-  const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([])
-  const [loadingSubjects, setLoadingSubjects] = useState(false)
-
   // States for delete confirmation modal
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [questionToDelete, setQuestionToDelete] = useState<{ id: string; content: string } | null>(null)
@@ -73,6 +74,15 @@ export default function QuestionView() {
     }),
     [searchParams]
   )
+
+  const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([])
+  const [loadingSubjects, setLoadingSubjects] = useState(false)
+
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>(() =>
+    currentSearchParams.subject_id ? currentSearchParams.subject_id.split(',').filter(Boolean) : []
+  )
+
+  const [selectedLevel, setSelectedLevel] = useState<string>(currentSearchParams.level || '')
 
   const [searchTerm, setSearchTerm] = useState<string>(currentSearchParams.search || '')
 
@@ -165,29 +175,27 @@ export default function QuestionView() {
     updateQueryParams(newParams)
   }
 
-  const handleSubjectChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const newSubjectId = e.target.value
-    const newParams = { ...currentSearchParams, subject_id: newSubjectId || undefined, page: '1' }
-
-    updateQueryParams(newParams)
-  }
-
   const handleLevelChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newLevel = e.target.value
-    const newParams = { ...currentSearchParams, level: newLevel || undefined, page: '1' }
+
+    setSelectedLevel(newLevel)
+  }
+
+  const handleApplySearch = () => {
+    const newParams = {
+      ...currentSearchParams,
+      search: searchTerm || undefined,
+      subject_id: selectedSubjectIds.length > 0 ? selectedSubjectIds.join(',') : undefined,
+      level: selectedLevel || undefined,
+      page: '1'
+    }
 
     updateQueryParams(newParams)
   }
 
   const handleChangeSearch = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter') {
-      const newParams = {
-        ...currentSearchParams,
-        search: searchTerm || undefined,
-        page: undefined
-      }
-
-      updateQueryParams(newParams)
+      handleApplySearch()
     }
   }
 
@@ -209,6 +217,27 @@ export default function QuestionView() {
         setLoadingSubjects(false)
       })
   }, [])
+
+  useEffect(() => {
+    const subjectParam = currentSearchParams.subject_id
+    const nextSelected = subjectParam ? subjectParam.split(',').filter(Boolean) : []
+
+    setSelectedSubjectIds(prev => {
+      if (prev.length === nextSelected.length && prev.every((id, index) => id === nextSelected[index])) {
+        return prev
+      }
+
+      return nextSelected
+    })
+  }, [currentSearchParams.subject_id])
+
+  useEffect(() => {
+    setSelectedLevel(currentSearchParams.level || '')
+  }, [currentSearchParams.level])
+
+  useEffect(() => {
+    setSearchTerm(currentSearchParams.search || '')
+  }, [currentSearchParams.search])
 
   const handlePageChange = (page: number) => {
     const newParams = { ...currentSearchParams, page: page.toString() }
@@ -242,35 +271,50 @@ export default function QuestionView() {
                 placeholder='Tìm kiếm'
                 className='max-sm:is-full is-[260px] !bg-white'
               />
-              <CustomTextField
-                select
-                value={currentSearchParams?.subject_id || ''}
-                onChange={handleSubjectChange}
-                className='max-sm:is-full is-[200px] !bg-white'
-                disabled={loadingSubjects}
-                SelectProps={{
-                  displayEmpty: true,
-                  renderValue: (selected: unknown) => {
-                    if (!selected || selected === '') {
-                      return 'Tất cả môn học'
-                    }
+              <Autocomplete
+                multiple
+                disableCloseOnSelect
+                options={subjects}
+                loading={loadingSubjects}
+                getOptionLabel={option => option.name}
+                value={subjects.filter(subject => selectedSubjectIds.includes(subject.id))}
+                onChange={(_, newValue) => {
+                  const newIds = newValue.map(subject => subject.id)
 
-                    const selectedSubject = subjects.find(subject => subject.id === String(selected))
-
-                    return selectedSubject?.name || 'Tất cả môn học'
-                  }
+                  setSelectedSubjectIds(newIds)
                 }}
-              >
-                <MenuItem value=''>Tất cả môn học</MenuItem>
-                {subjects.map(subject => (
-                  <MenuItem key={subject.id} value={subject.id}>
-                    {subject.name}
-                  </MenuItem>
-                ))}
-              </CustomTextField>
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => {
+                    const { key, ...tagProps } = getTagProps({ index })
+                    
+                    return <Chip key={key} label={option.name} {...tagProps} size='small' />
+                    
+                  })
+                }
+                renderOption={(props, option, { selected }) => {
+                  const { key, ...optionProps } = props
+
+                  return (
+                    <li key={key} {...optionProps}>
+                      <Checkbox checked={selected} />
+                      <ListItemText primary={option.name} />
+                    </li>
+                  )
+                }}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                renderInput={params => (
+                  <CustomTextField
+                    {...params}
+                    placeholder='Môn học liên quan'
+                    className='max-sm:is-full is-[260px] !bg-white'
+                  />
+                )}
+                noOptionsText='Không tìm thấy môn học phù hợp'
+                loadingText='Đang tải danh sách môn học...'
+              />
               <CustomTextField
                 select
-                value={currentSearchParams?.level || ''}
+                value={selectedLevel}
                 onChange={handleLevelChange}
                 className='max-sm:is-full is-[150px] !bg-white'
                 SelectProps={{
@@ -290,6 +334,9 @@ export default function QuestionView() {
                 <MenuItem value='3'>3</MenuItem>
                 <MenuItem value='4'>4</MenuItem>
               </CustomTextField>
+              <Button variant='contained' color='primary' onClick={handleApplySearch} className='!max-sm:is-full'>
+                Tìm kiếm
+              </Button>
             </div>
             <div className='flex flex-wrap items-center max-sm:flex-col gap-3'>
               <CustomTextField
