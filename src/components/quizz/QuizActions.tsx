@@ -36,6 +36,7 @@ export default function QuizActions({ onSuccess, isLoading, setIsLoading }: Quiz
     const payload: CreateQuizRequest = {
       name: data.name,
       description: data.description,
+      total_time: data.total_time * 60, // Convert minutes to seconds
       question_ids: data.question_ids
     }
 

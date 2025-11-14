@@ -22,7 +22,7 @@ export default function CreateQuizzForm() {
     defaultValues: {
       name: '',
       description: '',
-      duration: 0,
+      total_time: 0,
       question_ids: []
     },
     mode: 'onChange'
