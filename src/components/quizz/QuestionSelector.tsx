@@ -10,6 +10,7 @@ import FormControlLabel from '@mui/material/FormControlLabel'
 import Autocomplete from '@mui/material/Autocomplete'
 import Chip from '@mui/material/Chip'
 import ListItemText from '@mui/material/ListItemText'
+import Button from '@mui/material/Button'
 
 import { fetchApi } from '@/libs/fetchApi'
 import CustomTextField from '@/@core/components/mui/TextField'
@@ -49,12 +50,16 @@ export default function QuestionSelector({ selectedQuestions, onSelectionChange 
   const serverTotalItemsRef = useRef<number | null>(null)
   const selectedSubjectIdsRef = useRef<string[]>([])
 
-  // Filter states
-  const [searchTerm, setSearchTerm] = useState<string>('')
+  // Filter states - actual values used for API calls
+  const [appliedSearchTerm, setAppliedSearchTerm] = useState<string>('')
+  const [appliedLevel, setAppliedLevel] = useState<string>('')
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([])
-  const [level, setLevel] = useState<string>('')
   const [page, setPage] = useState<number>(1)
   const [limit, setLimit] = useState<number>(10)
+
+  // Local states for input fields (not applied until search button is clicked)
+  const [searchTerm, setSearchTerm] = useState<string>('')
+  const [level, setLevel] = useState<string>('')
 
   const skipNextFetchRef = useRef(false)
 
@@ -105,8 +110,8 @@ export default function QuestionSelector({ selectedQuestions, onSelectionChange 
 
       const queryString = new URLSearchParams()
 
-      if (searchTerm) queryString.append('search', searchTerm)
-      if (level) queryString.append('level', level)
+      if (appliedSearchTerm) queryString.append('search', appliedSearchTerm)
+      if (appliedLevel) queryString.append('level', appliedLevel)
       queryString.append('page', page.toString())
       queryString.append('limit', limit.toString())
 
@@ -130,7 +135,7 @@ export default function QuestionSelector({ selectedQuestions, onSelectionChange 
     } finally {
       setLoading(false)
     }
-  }, [applyQuestionFilters, limit, level, page, searchTerm])
+  }, [applyQuestionFilters, limit, appliedLevel, page, appliedSearchTerm])
 
   useEffect(() => {
     fetchQuestions()
@@ -172,12 +177,17 @@ export default function QuestionSelector({ selectedQuestions, onSelectionChange 
 
   const handleLevelChange = (e: ChangeEvent<HTMLInputElement>) => {
     setLevel(e.target.value)
+  }
+
+  const handleApplySearch = () => {
+    setAppliedSearchTerm(searchTerm)
+    setAppliedLevel(level)
     setPage(1)
   }
 
-  const handleSearchChange = (event: React.KeyboardEvent<HTMLDivElement>) => {
+  const handleChangeSearch = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter') {
-      setPage(1)
+      handleApplySearch()
     }
   }
 
@@ -216,10 +226,10 @@ export default function QuestionSelector({ selectedQuestions, onSelectionChange 
       <div className='flex flex-col lg:flex-row flex-wrap justify-between gap-3 p-6'>
         <div className='flex flex-wrap items-center max-sm:flex-col gap-3 max-sm:is-full is-auto'>
           <CustomTextField
-            value={searchTerm}
+            value={searchTerm || ''}
             type='search'
             onChange={e => setSearchTerm(e.target.value)}
-            onKeyUp={handleSearchChange}
+            onKeyUp={handleChangeSearch}
             placeholder='Tìm kiếm câu hỏi'
             className='max-sm:is-full is-[260px] !bg-white'
           />
@@ -235,11 +245,6 @@ export default function QuestionSelector({ selectedQuestions, onSelectionChange 
 
               setSelectedSubjectIds(newIds)
               selectedSubjectIdsRef.current = newIds
-
-              if (page !== 1) {
-                skipNextFetchRef.current = true
-                setPage(1)
-              }
             }}
             renderTags={(value, getTagProps) =>
               value.map((option, index) => {
@@ -291,6 +296,9 @@ export default function QuestionSelector({ selectedQuestions, onSelectionChange 
             <MenuItem value='3'>3</MenuItem>
             <MenuItem value='4'>4</MenuItem>
           </CustomTextField>
+          <Button variant='contained' color='primary' onClick={handleApplySearch} className='!max-sm:is-full'>
+            Tìm kiếm
+          </Button>
         </div>
         <div className='flex flex-wrap items-center max-sm:flex-col gap-3'>
           <CustomTextField
