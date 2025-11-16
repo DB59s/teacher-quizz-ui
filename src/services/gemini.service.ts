@@ -1,12 +1,12 @@
 import axios from 'axios'
 import { getSession } from 'next-auth/react'
 
-import type { GeminiGenerateResponse, CreateQuizFromAIPayload, Subject } from '@/types/gemini'
+import type { GeminiGenerateResponse, QuizStatusResponse, CreateQuizFromAIPayload, Subject } from '@/types/gemini'
 
 const API_BASE_URL = 'https://api.vuquangduy.io.vn'
 
 /**
- * Generate quiz questions from PDF file using AI
+ * Upload PDF and start quiz generation (returns job_id)
  */
 export const generateQuizFromPDF = async (file: File): Promise<GeminiGenerateResponse> => {
   try {
@@ -28,12 +28,46 @@ export const generateQuizFromPDF = async (file: File): Promise<GeminiGenerateRes
       return response.data
     }
 
-    throw new Error(response.data.message || 'Failed to generate quiz')
+    throw new Error(response.data.message || 'Failed to start quiz generation')
   } catch (error: any) {
-    console.error('Error generating quiz from PDF:', error)
+    console.error('Error uploading PDF:', error)
 
     if (error.response) {
-      throw new Error(error.response.data?.message || 'Failed to generate quiz')
+      throw new Error(error.response.data?.message || 'Failed to upload PDF')
+    }
+
+    throw error
+  }
+}
+
+/**
+ * Check quiz generation status by job_id
+ */
+export const checkQuizStatus = async (jobId: string): Promise<QuizStatusResponse> => {
+  try {
+    const session = await getSession()
+    const token = session?.accessToken
+
+    const response = await axios.get<QuizStatusResponse>(
+      `${API_BASE_URL}/api/v1/gemini/quiz-status/${jobId}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` })
+        }
+      }
+    )
+
+    if (response.data.success) {
+      return response.data
+    }
+
+    throw new Error(response.data.message || 'Failed to check quiz status')
+  } catch (error: any) {
+    console.error('Error checking quiz status:', error)
+
+    if (error.response) {
+      throw new Error(error.response.data?.message || 'Failed to check quiz status')
     }
 
     throw error

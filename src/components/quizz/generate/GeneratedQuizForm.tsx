@@ -77,7 +77,13 @@ export default function GeneratedQuizForm({ questions, onSuccess, onReset }: Gen
     setIsSubmitting(true)
 
     try {
-      await createQuizFromAI(data)
+      // Convert total_time to number before sending
+      const payload = {
+        ...data,
+        total_time: Number(data.total_time)
+      }
+
+      await createQuizFromAI(payload)
 
       onSuccess()
     } catch (error: any) {
@@ -188,6 +194,7 @@ export default function GeneratedQuizForm({ questions, onSuccess, onReset }: Gen
             render={({ field }) => (
               <TextField
                 {...field}
+                onChange={e => field.onChange(Number(e.target.value))}
                 fullWidth
                 type='number'
                 label='Thời gian làm bài (giây)'
