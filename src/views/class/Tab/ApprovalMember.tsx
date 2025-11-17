@@ -7,6 +7,8 @@ import clsx from 'clsx'
 import MenuItem from '@mui/material/MenuItem'
 import { Clock } from 'lucide-react'
 
+import { toast } from 'react-toastify'
+
 import useTableHead from '@/hooks/useTableHead'
 import { getClassStudents, approveStudent, rejectStudent } from '@/services/class.service'
 
@@ -70,8 +72,16 @@ export default function ApprovalMember(data: any) {
     try {
       await approveStudent(registrationId)
       await fetchClassDetails()
-    } catch (error) {
+      toast.success('Phê duyệt học sinh thành công!', {
+        position: 'bottom-right',
+        autoClose: 3000
+      })
+    } catch (error: any) {
       console.error(error)
+      toast.error(error.message || 'Phê duyệt học sinh thất bại!', {
+        position: 'bottom-right',
+        autoClose: 3000
+      })
     } finally {
       setLoading(false)
     }
@@ -83,8 +93,16 @@ export default function ApprovalMember(data: any) {
     try {
       await rejectStudent(registrationId)
       await fetchClassDetails()
-    } catch (error) {
+      toast.success('Từ chối học sinh thành công!', {
+        position: 'bottom-right',
+        autoClose: 3000
+      })
+    } catch (error: any) {
       console.error(error)
+      toast.error(error.message || 'Từ chối học sinh thất bại!', {
+        position: 'bottom-right',
+        autoClose: 3000
+      })
     } finally {
       setLoading(false)
     }

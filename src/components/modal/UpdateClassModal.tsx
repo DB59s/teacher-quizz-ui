@@ -20,10 +20,12 @@ import Stack from '@mui/material/Stack'
 import { toast } from 'react-toastify'
 
 import { updateClass, deleteClass, type UpdateClassPayload } from '@/services/class.service'
+import useClass from '@/hooks/useClass'
 
 interface UpdateClassModalProps {
   open: boolean
   onClose: () => void
+  onSuccess?: () => void
   classData: {
     id: string
     name: string
@@ -32,8 +34,9 @@ interface UpdateClassModalProps {
   }
 }
 
-export default function UpdateClassModal({ open, onClose, classData }: UpdateClassModalProps) {
+export default function UpdateClassModal({ open, onClose, onSuccess, classData }: UpdateClassModalProps) {
   const router = useRouter()
+  const { refreshClasses } = useClass()
   const [loading, setLoading] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -64,21 +67,16 @@ export default function UpdateClassModal({ open, onClose, classData }: UpdateCla
     try {
       setLoading(true)
       await updateClass(classData.id, formData)
+
+      // Refresh danh sách lớp học
+      await refreshClasses()
+
       toast.success('Cập nhật lớp học thành công')
       onClose()
-      
-      // Refresh data to reflect latest class info
-      
-      try {
-        router.refresh()
-      } catch (e) {
 
-      }
-      
-      // Ensure hard reload in case soft refresh doesn't bust caches
-
-      if (typeof window !== 'undefined') {
-        window.location.reload()
+      // Gọi callback để refresh dữ liệu trang
+      if (onSuccess) {
+        onSuccess()
       }
     } catch (error: any) {
       toast.error(error.message || 'Cập nhật lớp học thất bại')
@@ -95,6 +93,10 @@ export default function UpdateClassModal({ open, onClose, classData }: UpdateCla
     try {
       setDeleteLoading(true)
       await deleteClass(classData.id)
+
+      // Refresh danh sách lớp học
+      await refreshClasses()
+
       toast.success('Xóa lớp học thành công')
       setShowDeleteConfirm(false)
       onClose()

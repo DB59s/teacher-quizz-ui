@@ -28,7 +28,7 @@ export interface DashboardResponse {
   data: DashboardData
 }
 
-const API_BASE_URL = 'https://api.vuquangduy.io.vn'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 // Create axios instance for dashboard service with interceptors
 let dashboardServerInstance: AxiosInstance | null = null

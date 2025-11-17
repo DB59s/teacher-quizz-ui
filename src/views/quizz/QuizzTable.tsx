@@ -6,7 +6,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 
 import Card from '@mui/material/Card'
-import MenuItem from '@mui/material/MenuItem'
+
+// import MenuItem from '@mui/material/MenuItem'
+
 import clsx from 'clsx'
 
 import { Edit2, Eye, Trash } from 'iconsax-react'
@@ -18,12 +20,11 @@ import useTableHead from '@/hooks/useTableHead'
 import { fetchApi } from '@/libs/fetchApi'
 import PageLoading from '@/theme/PageLoading'
 import CustomIconButton from '@/@core/components/mui/IconButton'
-import CustomTextField from '@/@core/components/mui/TextField'
 import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
 import ModalConfirmDeleteQuizz from '@/components/modal/ModalConfirmDeleteQuizz'
 import QuizDetailModal from '@/components/dialogs/QuizDetailModal'
 import EditQuizModal from '@/components/dialogs/EditQuizModal'
-import { deleteQuiz } from '@/services/quiz.service'
+import { formatDateVN } from '@/utils/dateFormat'
 
 type PaginationData = {
   page: number
@@ -121,48 +122,23 @@ export default function QuizzTable() {
     setShowDeleteDialog(true)
   }
 
-  const handleDeleteSuccess = async () => {
-    if (!quizToDelete) return
+  const handleDeleteSuccess = () => {
+    toast.success('Xóa quiz thành công!', {
+      position: 'bottom-right',
+      autoClose: 3000
+    })
 
-    try {
-      await deleteQuiz(quizToDelete.id)
-      toast.success('Xóa thành công', {
-        position: 'bottom-right',
-        autoClose: 3000
-      })
+    // Reset states
+    setQuizToDelete(null)
+    setShowDeleteDialog(false)
 
-      // Reset states
-      setQuizToDelete(null)
-      setShowDeleteDialog(false)
-
-      // Refresh quizzes list
-      fetchQuizzes()
-    } catch (error: any) {
-      toast.error(error.message || 'Có lỗi xảy ra khi xóa quiz', {
-        position: 'bottom-right',
-        autoClose: 3000
-      })
-    }
+    // Refresh quizzes list
+    fetchQuizzes()
   }
-
 
   return (
     <Card>
       <PageLoading show={loading} />
-      <div className='flex flex-col lg:flex-row flex-wrap justify-between gap-3 p-6'>
-        <div className='flex flex-wrap items-center max-sm:flex-col gap-3 max-sm:is-full is-auto'>
-          <CustomTextField
-            select
-            value={currentSearchParams?.limit || '10'}
-            onChange={handleLimitChange}
-            className='flex-auto is-[70px]'
-          >
-            <MenuItem value='10'>10</MenuItem>
-            <MenuItem value='25'>25</MenuItem>
-            <MenuItem value='50'>50</MenuItem>
-          </CustomTextField>
-        </div>
-      </div>
       <div className='overflow-x-auto w-full'>
         <table className='w-full min-w-max table-auto text-left text-sm border-spacing-0'>
           <thead>
@@ -186,10 +162,13 @@ export default function QuizzTable() {
             {quizzes && quizzes.length > 0 ? (
               quizzes.map((quiz: any, index: number) => {
                 const key = quiz.id || quiz._id || `quiz-${index}`
+                const currentPage = parseInt(currentSearchParams.page || '1')
+                const limit = parseInt(currentSearchParams.limit || '10')
+                const stt = (currentPage - 1) * limit + index + 1
 
                 return (
                   <tr key={key} className='border-t border-grey-200 hover:bg-grey-100'>
-                    <td className='px-3 py-4 text-center'>{index + 1}</td>
+                    <td className='px-3 py-4 text-center'>{stt}</td>
                     <td className='action px-3 py-3'>
                       <div className='flex items-center justify-center gap-2'>
                         <CustomIconButton
@@ -219,10 +198,12 @@ export default function QuizzTable() {
                       </div>
                     </td>
                     <td className='px-3 py-4 text-center'>{quiz.name}</td>
-                    <td className='px-3 py-4 text-center'>10</td>
-                    <td className='px-3 py-4 text-center'>30 phút</td>
-                    <td className='px-3 py-4 text-center'>{new Date(quiz.created_at).toLocaleDateString('vi-VN')}</td>
-                    <td className='px-3 py-4 text-center'>{new Date(quiz.updated_at).toLocaleDateString('vi-VN')}</td>
+                    <td className='px-3 py-4 text-center'>{quiz.total_question || 0}</td>
+                    <td className='px-3 py-4 text-center'>
+                      {quiz.total_time ? Math.round(quiz.total_time / 60) : 0} phút
+                    </td>
+                    <td className='px-3 py-4 text-center'>{formatDateVN(quiz.created_at)}</td>
+                    <td className='px-3 py-4 text-center'>{formatDateVN(quiz.updated_at)}</td>
                   </tr>
                 )
               })
@@ -241,7 +222,12 @@ export default function QuizzTable() {
       </div>
 
       {paginationData && (
-        <TableRCPaginationCustom pagination={paginationData} onChangePage={page => handlePageChange(page)} />
+        <TableRCPaginationCustom
+          pagination={paginationData}
+          onChangePage={page => handlePageChange(page)}
+          onLimitChange={handleLimitChange}
+          showLimitSelector={true}
+        />
       )}
 
       {/* Delete Confirmation Modal */}

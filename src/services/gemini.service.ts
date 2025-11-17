@@ -3,7 +3,7 @@ import { getSession } from 'next-auth/react'
 
 import type { GeminiGenerateResponse, QuizStatusResponse, CreateQuizFromAIPayload, Subject } from '@/types/gemini'
 
-const API_BASE_URL = 'https://api.vuquangduy.io.vn'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 /**
  * Upload PDF and start quiz generation (returns job_id)
@@ -48,15 +48,12 @@ export const checkQuizStatus = async (jobId: string): Promise<QuizStatusResponse
     const session = await getSession()
     const token = session?.accessToken
 
-    const response = await axios.get<QuizStatusResponse>(
-      `${API_BASE_URL}/api/v1/gemini/quiz-status/${jobId}`,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` })
-        }
+    const response = await axios.get<QuizStatusResponse>(`${API_BASE_URL}/api/v1/gemini/quiz-status/${jobId}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` })
       }
-    )
+    })
 
     if (response.data.success) {
       return response.data

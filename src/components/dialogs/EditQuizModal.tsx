@@ -20,7 +20,7 @@ import IconButton from '@mui/material/IconButton'
 
 // Third-party Imports
 import { toast } from 'react-toastify'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Edit2 } from 'lucide-react'
 
 // Service Imports
 import { getQuizDetail, updateQuiz, type QuizDetail, type Question } from '@/services/quiz.service'
@@ -43,6 +43,11 @@ type AvailableQuestion = {
   content: string
   level: number
   type: string
+  answers?: {
+    id: string
+    content: string
+    is_true: boolean
+  }[]
 }
 
 const EditQuizModal = ({ open, onClose, quizId, onUpdateSuccess, additionalQuestionActions }: EditQuizModalProps) => {
@@ -119,15 +124,39 @@ const EditQuizModal = ({ open, onClose, quizId, onUpdateSuccess, additionalQuest
     }
   }
 
-  const handleAddQuestion = (questionId: string) => {
+  const handleAddQuestion = async (questionId: string) => {
     if (!selectedQuestionIds.includes(questionId)) {
       setSelectedQuestionIds([...selectedQuestionIds, questionId])
       setShowAddQuestionDialog(false)
       toast.success('Đã thêm câu hỏi', { position: 'bottom-right', autoClose: 2000 })
+
+      // Fetch chi tiết câu hỏi để có thông tin đáp án
+      try {
+        const response = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/questions/${questionId}`, {
+          method: 'GET'
+        })
+
+        if (response.ok) {
+          const questionDetail = await response.json()
+
+          // Cập nhật availableQuestions với thông tin đầy đủ
+          setAvailableQuestions(prev =>
+            prev.map(q => (q.id === questionId ? { ...q, answers: questionDetail.answers } : q))
+          )
+        }
+      } catch (error) {
+        console.error('Error fetching question detail:', error)
+      }
     }
   }
 
   const handleRemoveQuestion = (questionId: string) => {
+    if (selectedQuestionIds.length <= 1) {
+      toast.error('Quiz phải có ít nhất 1 câu hỏi', { position: 'bottom-right', autoClose: 3000 })
+      
+      return
+    }
+    
     setSelectedQuestionIds(selectedQuestionIds.filter(id => id !== questionId))
     toast.success('Đã xóa câu hỏi', { position: 'bottom-right', autoClose: 2000 })
   }
@@ -172,8 +201,8 @@ const EditQuizModal = ({ open, onClose, quizId, onUpdateSuccess, additionalQuest
         onUpdateSuccess()
       }
 
-      // Refresh quiz detail
-      await fetchQuizDetail()
+      // Đóng modal sau khi cập nhật thành công
+      onClose()
     } catch (error: any) {
       toast.error(error.message || 'Có lỗi xảy ra khi cập nhật quiz', {
         position: 'bottom-right',
@@ -269,18 +298,75 @@ const EditQuizModal = ({ open, onClose, quizId, onUpdateSuccess, additionalQuest
                                   <Chip label={`Độ khó: ${availableQuestion.level}`} size='small' variant='outlined' />
                                 )}
                               </Box>
-                              <Typography variant='body1'>
+                              <Typography variant='body1' className='mb-2'>
                                 {question?.content || availableQuestion?.content || 'Đang tải...'}
                               </Typography>
+                              {((question?.answers && question.answers.length > 0) ||
+                                (availableQuestion?.answers && availableQuestion.answers.length > 0)) && (
+                                <Box className='mt-2'>
+                                  <Typography variant='subtitle2' className='mb-2'>
+                                    Đáp án:
+                                  </Typography>
+                                  <Box className='space-y-2'>
+                                    {(question?.answers || availableQuestion?.answers || []).map(
+                                      (answer, answerIndex) => {
+                                        const questionType = question?.type || availableQuestion?.type || '1'
+                                        const isMultipleChoice = String(questionType) === '2'
+                                        const inputType = isMultipleChoice ? 'checkbox' : 'radio'
+
+                                        return (
+                                          <Box
+                                            key={answerIndex}
+                                            sx={{
+                                              p: 2,
+                                              borderRadius: 1,
+                                              border: 1,
+                                              borderColor: answer.is_true ? 'success.main' : 'divider',
+                                              bgcolor: answer.is_true ? 'success.light' : 'action.hover'
+                                            }}
+                                          >
+                                            <Box className='flex items-center gap-2'>
+                                              <input
+                                                type={inputType}
+                                                checked={answer.is_true}
+                                                disabled
+                                                readOnly
+                                                style={{ cursor: 'not-allowed' }}
+                                              />
+                                              <Typography variant='body1'>{answer.content}</Typography>
+                                              {answer.is_true && (
+                                                <Chip label='Đúng' size='small' color='success' sx={{ ml: 'auto' }} />
+                                              )}
+                                            </Box>
+                                          </Box>
+                                        )
+                                      }
+                                    )}
+                                  </Box>
+                                </Box>
+                              )}
                             </Box>
-                            <IconButton
-                              size='small'
-                              color='error'
-                              onClick={() => handleRemoveQuestion(questionId)}
-                              className='ml-2'
-                            >
-                              <Trash2 size={18} />
-                            </IconButton>
+                            <Box className='flex items-center gap-1 ml-2'>
+                              <IconButton
+                                size='small'
+                                color='primary'
+                                onClick={() => handleOpenEditQuestion(questionId)}
+                                title='Sửa câu hỏi'
+                              >
+                                <Edit2 size={18} />
+                              </IconButton>
+                              <IconButton
+                                size='small'
+                                color='error'
+                                onClick={() => handleRemoveQuestion(questionId)}
+                                title={
+                                  selectedQuestionIds.length <= 1 ? 'Quiz phải có ít nhất 1 câu hỏi' : 'Xóa khỏi quiz'
+                                }
+                                disabled={selectedQuestionIds.length <= 1}
+                              >
+                                <Trash2 size={18} />
+                              </IconButton>
+                            </Box>
                           </Box>
                         </CardContent>
                       </Card>

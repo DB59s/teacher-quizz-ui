@@ -7,6 +7,7 @@ import { VerticalNavProvider } from '@menu/contexts/verticalNavContext'
 import { SettingsProvider } from '@core/contexts/settingsContext'
 import ThemeProvider from '@components/theme'
 import ReduxProvider from '@/redux-store/ReduxProvider'
+import { ClassProvider } from '@/contexts/ClassContext'
 
 // Styled Component Imports
 import AppReactToastify from '@/libs/styles/AppReactToastify'
@@ -32,8 +33,10 @@ const Providers = async (props: Props) => {
       <VerticalNavProvider>
         <SettingsProvider settingsCookie={settingsCookie} mode={mode}>
           <ThemeProvider direction={direction} systemMode={systemMode}>
-            <ReduxProvider>{children}</ReduxProvider>
-            <AppReactToastify direction={direction} hideProgressBar />
+            <ClassProvider>
+              <ReduxProvider>{children}</ReduxProvider>
+              <AppReactToastify direction={direction} hideProgressBar />
+            </ClassProvider>
           </ThemeProvider>
         </SettingsProvider>
       </VerticalNavProvider>

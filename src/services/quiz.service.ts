@@ -2,7 +2,7 @@ import axios from 'axios'
 
 import { getSession } from 'next-auth/react'
 
-const API_BASE_URL = 'https://api.vuquangduy.io.vn'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 export interface Answer {
   id: string

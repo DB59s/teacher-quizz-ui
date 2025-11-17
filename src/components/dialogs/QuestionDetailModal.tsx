@@ -23,6 +23,9 @@ import { fetchApi } from '@/libs/fetchApi'
 // Component Imports
 import PageLoading from '@/theme/PageLoading'
 
+// Utils Imports
+import { formatDateVN } from '@/utils/dateFormat'
+
 type QuestionDetailModalProps = {
   open: boolean
   onClose: () => void
@@ -109,10 +112,10 @@ const QuestionDetailModal = ({ open, onClose, questionId }: QuestionDetailModalP
                 <Divider className='mb-3' />
                 <Box className='flex gap-4 mt-3'>
                   <Typography variant='caption' color='text.secondary'>
-                    Tạo ngày: {new Date(questionDetail.created_at).toLocaleString('vi-VN')}
+                    Tạo ngày: {formatDateVN(questionDetail.created_at, true)}
                   </Typography>
                   <Typography variant='caption' color='text.secondary'>
-                    Cập nhật: {new Date(questionDetail.updated_at).toLocaleString('vi-VN')}
+                    Cập nhật: {formatDateVN(questionDetail.updated_at, true)}
                   </Typography>
                 </Box>
               </CardContent>
