@@ -51,7 +51,6 @@ export default function ApprovalMember(data: any) {
     fetchClassDetails()
   }, [fetchClassDetails])
 
-  console.log('Pending Students:', students)
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)

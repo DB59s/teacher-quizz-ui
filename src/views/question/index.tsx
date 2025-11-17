@@ -26,7 +26,7 @@ import { useQueryParams } from '@/hooks/useQueryParams'
 import useTableHead from '@/hooks/useTableHead'
 
 import CustomIconButton from '@/@core/components/mui/IconButton'
-import { fetchApi } from '@/libs/fetchApi'
+import { apiClient } from '@/libs/axios-client'
 import PageLoading from '@/theme/PageLoading'
 import CustomTextField from '@/@core/components/mui/TextField'
 import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
@@ -101,16 +101,11 @@ export default function QuestionView() {
       if (currentSearchParams.level) queryString.append('level', currentSearchParams.level)
 
       // Tạo URL với query parameters
-      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/questions${queryString.toString() ? `?${queryString.toString()}` : ''}`
+      const apiUrl = `/api/v1/questions${queryString.toString() ? `?${queryString.toString()}` : ''}`
 
-      const questionsRes = await fetchApi(apiUrl, { method: 'GET' })
+      const questionsRes = await apiClient.get(apiUrl)
 
-      if (!questionsRes.ok) {
-        setPaginationData(null)
-        throw new Error('Không lấy được danh sách câu hỏi')
-      }
-
-      const questionsData = await questionsRes.json()
+      const questionsData = questionsRes.data
 
       setQuestionData(questionsData?.data || [])
 
@@ -201,14 +196,9 @@ export default function QuestionView() {
 
   useEffect(() => {
     setLoadingSubjects(true)
-    fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/subjects?page=1&limit=100`, { method: 'GET' })
+    apiClient.get('/api/v1/subjects?page=1&limit=100')
       .then(res => {
-        if (!res.ok) throw new Error('Không lấy được danh sách môn học')
-
-        return res.json()
-      })
-      .then(json => {
-        setSubjects(json?.data || [])
+        setSubjects(res.data?.data || [])
       })
       .catch(err => {
         console.error(err)
@@ -338,18 +328,6 @@ export default function QuestionView() {
                 Tìm kiếm
               </Button>
             </div>
-            <div className='flex flex-wrap items-center max-sm:flex-col gap-3'>
-              <CustomTextField
-                select
-                value={currentSearchParams?.limit || '10'}
-                onChange={handleLimitChange}
-                className='flex-auto is-[70px] max-sm:is-full'
-              >
-                <MenuItem value='10'>10</MenuItem>
-                <MenuItem value='25'>25</MenuItem>
-                <MenuItem value='50'>50</MenuItem>
-              </CustomTextField>
-            </div>
           </div>
           <div className='overflow-x-auto w-full'>
             <table className='w-full min-w-max table-auto text-left text-sm border-spacing-0'>
@@ -425,7 +403,12 @@ export default function QuestionView() {
             </table>
           </div>
           {paginationData && (
-            <TableRCPaginationCustom pagination={paginationData} onChangePage={page => handlePageChange(page)} />
+            <TableRCPaginationCustom
+              pagination={paginationData}
+              onChangePage={page => handlePageChange(page)}
+              onLimitChange={handleLimitChange}
+              showLimitSelector={true}
+            />
           )}
         </Card>
       </Grid>

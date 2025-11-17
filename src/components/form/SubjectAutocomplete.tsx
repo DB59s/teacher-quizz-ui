@@ -11,7 +11,7 @@ import ListItemText from '@mui/material/ListItemText'
 
 import CustomTextField from '@/@core/components/mui/TextField'
 import CustomInputLabel from '@/components/form/CustomInputLabel'
-import { fetchApi } from '@/libs/fetchApi'
+import { apiClient } from '@/libs/axios-client'
 
 type Subject = {
   id: string
@@ -41,14 +41,9 @@ export default function SubjectAutocomplete({
 
   useEffect(() => {
     setLoadingSubjects(true)
-    fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/subjects?page=1&limit=100`, { method: 'GET' })
+    apiClient.get('/api/v1/subjects?page=1&limit=100')
       .then(res => {
-        if (!res.ok) throw new Error('Không lấy được danh sách môn học')
-
-        return res.json()
-      })
-      .then(json => {
-        setSubjects(json?.data || [])
+        setSubjects(res.data?.data || [])
       })
       .catch(err => {
         setErrorSubjects(err.message || 'Lỗi không xác định')

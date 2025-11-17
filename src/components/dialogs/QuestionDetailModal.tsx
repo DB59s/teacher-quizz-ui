@@ -18,7 +18,7 @@ import Divider from '@mui/material/Divider'
 
 // Service Imports
 import { getQuestionDetail, type QuestionDetail, type Answer } from '@/services/question.service'
-import { fetchApi } from '@/libs/fetchApi'
+import { apiClient } from '@/libs/axios-client'
 
 // Component Imports
 import PageLoading from '@/theme/PageLoading'
@@ -52,14 +52,9 @@ const QuestionDetailModal = ({ open, onClose, questionId }: QuestionDetailModalP
   useEffect(() => {
     // Fetch subjects list when modal opens
     if (open) {
-      fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/subjects?page=1&limit=100`, { method: 'GET' })
+      apiClient.get('/api/v1/subjects?page=1&limit=100')
         .then(res => {
-          if (!res.ok) throw new Error('Không lấy được danh sách môn học')
-
-          return res.json()
-        })
-        .then(json => {
-          setSubjects(json?.data || [])
+          setSubjects(res.data?.data || [])
         })
         .catch(err => {
           console.error('Error fetching subjects:', err)

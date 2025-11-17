@@ -24,7 +24,7 @@ import { Plus, Trash2, Edit2 } from 'lucide-react'
 
 // Service Imports
 import { getQuizDetail, updateQuiz, type QuizDetail, type Question } from '@/services/quiz.service'
-import { fetchApi } from '@/libs/fetchApi'
+import { apiClient } from '@/libs/axios-client'
 
 // Component Imports
 import PageLoading from '@/theme/PageLoading'
@@ -108,15 +108,9 @@ const EditQuizModal = ({ open, onClose, quizId, onUpdateSuccess, additionalQuest
     setLoadingQuestions(true)
 
     try {
-      const response = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/questions`, {
-        method: 'GET'
-      })
+      const response = await apiClient.get('/api/v1/questions')
 
-      if (!response.ok) throw new Error('Failed to fetch questions')
-
-      const json = await response.json()
-
-      setAvailableQuestions(json?.data || [])
+      setAvailableQuestions(response.data?.data || [])
     } catch (error) {
       console.error('Error fetching available questions:', error)
     } finally {
@@ -132,18 +126,12 @@ const EditQuizModal = ({ open, onClose, quizId, onUpdateSuccess, additionalQuest
 
       // Fetch chi tiết câu hỏi để có thông tin đáp án
       try {
-        const response = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/questions/${questionId}`, {
-          method: 'GET'
-        })
+        const response = await apiClient.get(`/api/v1/questions/${questionId}`)
 
-        if (response.ok) {
-          const questionDetail = await response.json()
-
-          // Cập nhật availableQuestions với thông tin đầy đủ
-          setAvailableQuestions(prev =>
-            prev.map(q => (q.id === questionId ? { ...q, answers: questionDetail.answers } : q))
-          )
-        }
+        // Cập nhật availableQuestions với thông tin đầy đủ
+        setAvailableQuestions(prev =>
+          prev.map(q => (q.id === questionId ? { ...q, answers: response.data.answers } : q))
+        )
       } catch (error) {
         console.error('Error fetching question detail:', error)
       }

@@ -40,7 +40,7 @@ import CustomTextField from '@/@core/components/mui/TextField'
 import CustomInputLabel from '../form/CustomInputLabel'
 import DialogCloseButton from '../dialogs/DialogCloseButton'
 import SubjectAutocomplete from '../form/SubjectAutocomplete'
-import { fetchApi } from '@/libs/fetchApi'
+import { apiClient } from '@/libs/axios-client'
 
 export default function ModalCreateQuestion({ type, open, setOpen, questionId }: ModalCreateQuestionProps) {
   const {
@@ -90,14 +90,9 @@ export default function ModalCreateQuestion({ type, open, setOpen, questionId }:
     setLoadingQuestion(true)
 
     try {
-      const res = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/questions/${questionId}`, {
-        method: 'GET'
-      })
+      const res = await apiClient.get(`/api/v1/questions/${questionId}`)
 
-      if (!res.ok) throw new Error('Không lấy được thông tin câu hỏi')
-
-      const data = await res.json()
-      const question = data as any
+      const question = res.data as any
 
       // Fill form with question data
       reset({
@@ -132,21 +127,11 @@ export default function ModalCreateQuestion({ type, open, setOpen, questionId }:
     try {
       if (type === 'edit' && questionId) {
         // Update existing question
-        const response = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/questions/${questionId}`, {
-          method: 'PATCH',
-          body: JSON.stringify(values)
-        })
-
-        if (!response.ok) throw new Error('Cập nhật câu hỏi thất bại')
+        await apiClient.patch(`/api/v1/questions/${questionId}`, values)
         toast.success('Cập nhật câu hỏi thành công!', { position: 'bottom-right', autoClose: 5000 })
       } else {
         // Create new question
-        const response = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/questions`, {
-          method: 'POST',
-          body: JSON.stringify(values)
-        })
-
-        if (!response.ok) throw new Error('Tạo câu hỏi thất bại')
+        await apiClient.post('/api/v1/questions', values)
         toast.success('Tạo câu hỏi thành công!', { position: 'bottom-right', autoClose: 5000 })
       }
 

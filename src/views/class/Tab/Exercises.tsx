@@ -28,7 +28,7 @@ import Chip from '@mui/material/Chip'
 import Divider from '@mui/material/Divider'
 import Grid from '@mui/material/Grid2'
 
-import { fetchApi } from '@/libs/fetchApi'
+import { apiClient } from '@/libs/axios-client'
 import PageLoading from '@/theme/PageLoading'
 import CustomIconButton from '@/@core/components/mui/IconButton'
 import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
@@ -119,14 +119,9 @@ export default function Exercises({ data }: any) {
     setLoadingQuizzes(true)
 
     try {
-      const response = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/quizzes`, {
-        method: 'GET'
-      })
+      const { data } = await apiClient.get('/api/v1/quizzes')
 
-      if (!response.ok) throw new Error('Failed to fetch quizzes')
-      const json = await response.json()
-
-      setAvailableQuizzes(json?.data || [])
+      setAvailableQuizzes(data?.data || [])
     } catch (error) {
       console.error('Error fetching available quizzes:', error)
     } finally {
@@ -146,18 +141,12 @@ export default function Exercises({ data }: any) {
       queryString.append('page', currentPage.toString())
       queryString.append('limit', itemsPerPage.toString())
 
-      const response = await fetchApi(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/class-quizzes/class/${class_id}?${queryString.toString()}`,
-        {
-          method: 'GET'
-        }
+      const { data } = await apiClient.get(
+        `/api/v1/class-quizzes/class/${class_id}?${queryString.toString()}`
       )
 
-      if (!response.ok) throw new Error('Failed to fetch class quizzes')
-      const json = await response.json()
-
-      setClassQuizzes(json?.data || [])
-      setPaginationData(json?.pagination || null)
+      setClassQuizzes(data?.data || [])
+      setPaginationData(data?.pagination || null)
     } catch (error) {
       console.error('Error fetching class quizzes:', error)
     } finally {
@@ -170,17 +159,12 @@ export default function Exercises({ data }: any) {
     if (!selectedQuiz || !startTime || !endTime) return
 
     try {
-      const response = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/class-quizzes`, {
-        method: 'POST',
-        body: JSON.stringify({
-          quiz_id: selectedQuiz.id,
-          class_id: class_id,
-          start_time: startTime,
-          end_time: endTime
-        })
+      await apiClient.post('/api/v1/class-quizzes', {
+        quiz_id: selectedQuiz.id,
+        class_id: class_id,
+        start_time: startTime,
+        end_time: endTime
       })
-
-      if (!response.ok) throw new Error('Failed to add quiz to class')
 
       // Refresh class quizzes list
       fetchClassQuizzes()

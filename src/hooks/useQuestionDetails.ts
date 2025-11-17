@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-import { fetchApi } from '@/libs/fetchApi'
+import { apiClient } from '@/libs/axios-client'
 
 type QuestionDetail = {
   id: string
@@ -31,13 +31,7 @@ export function useQuestionDetails(questionIds: string[]) {
         // Fetch all questions in parallel
         const promises = questionIds.map(async questionId => {
           try {
-            const response = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/questions/${questionId}`, {
-              method: 'GET'
-            })
-
-            if (!response.ok) throw new Error('Failed to fetch question')
-
-            const data = await response.json()
+            const { data } = await apiClient.get(`/api/v1/questions/${questionId}`)
 
             return {
               id: questionId,
@@ -46,7 +40,7 @@ export function useQuestionDetails(questionIds: string[]) {
             }
           } catch (error) {
             console.error(`Error fetching question ${questionId}:`, error)
-            
+
             return null
           }
         })

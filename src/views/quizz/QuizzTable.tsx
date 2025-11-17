@@ -17,7 +17,7 @@ import { toast } from 'react-toastify'
 
 import { useQueryParams } from '@/hooks/useQueryParams'
 import useTableHead from '@/hooks/useTableHead'
-import { fetchApi } from '@/libs/fetchApi'
+import { apiClient } from '@/libs/axios-client'
 import PageLoading from '@/theme/PageLoading'
 import CustomIconButton from '@/@core/components/mui/IconButton'
 import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
@@ -70,14 +70,11 @@ export default function QuizzTable() {
       if (currentSearchParams.page) queryString.append('page', currentSearchParams.page)
       if (currentSearchParams.limit) queryString.append('limit', currentSearchParams.limit)
 
-      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/quizzes${queryString.toString() ? `?${queryString.toString()}` : ''}`
+      const apiUrl = `/api/v1/quizzes${queryString.toString() ? `?${queryString.toString()}` : ''}`
 
-      const response = await fetchApi(apiUrl, {
-        method: 'GET'
-      })
+      const response = await apiClient.get(apiUrl)
 
-      if (!response.ok) throw new Error('Failed to fetch quizzes')
-      const json = await response.json()
+      const json = response.data
 
       setQuizzes(json?.data || [])
 

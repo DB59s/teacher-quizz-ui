@@ -8,7 +8,7 @@ import { Controller, FormProvider, useForm } from 'react-hook-form'
 
 import Grid from '@mui/material/Grid2'
 
-import { fetchApi } from '@/libs/fetchApi'
+import { apiClient } from '@/libs/axios-client'
 import FormComponent from '@/components/Form'
 import CustomInputLabel from '@/components/form/CustomInputLabel'
 import TextField from '@/@core/components/mui/TextField'
@@ -38,24 +38,21 @@ export default function Profile() {
 
   const fetchUserProfile = useCallback(async () => {
     try {
-      const response = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/me`, { method: 'GET' })
+      const response = await apiClient.get('/api/v1/users/me')
 
-      if (response.ok) {
-        const data = await response.json()
-        const profileData = data?.data
+      const profileData = response.data?.data
 
-        setUserProfile(profileData)
+      setUserProfile(profileData)
 
-        // Tự động fill dữ liệu vào form
-        if (profileData) {
-          reset({
-            department: profileData.department || '',
-            email: profileData.email || '',
-            full_name: profileData.full_name || '',
-            phone_number: profileData.phone_number || '',
-            university: profileData.university || ''
-          })
-        }
+      // Tự động fill dữ liệu vào form
+      if (profileData) {
+        reset({
+          department: profileData.department || '',
+          email: profileData.email || '',
+          full_name: profileData.full_name || '',
+          phone_number: profileData.phone_number || '',
+          university: profileData.university || ''
+        })
       }
     } catch (error) {
       console.error('Error fetching user profile:', error)

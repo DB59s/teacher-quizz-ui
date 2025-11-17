@@ -39,7 +39,7 @@ export default async function AuthGuard({ children }: ChildrenType) {
 
   if (!session) {
     // Direct server-side redirect - works immediately without component
-    console.log('[AuthGuard] No session found, redirecting to /login')
+
     redirect('/login')
   }
 
@@ -47,17 +47,16 @@ export default async function AuthGuard({ children }: ChildrenType) {
   const tokenExpired = isTokenExpired(session.accessToken as string)
 
   if (!session.accessToken) {
-    console.log('[AuthGuard] No accessToken in session, redirecting to /login')
+
     redirect('/login')
   }
 
   if (tokenExpired) {
-    console.log('[AuthGuard] AccessToken is expired, redirecting to /login')
-    console.log('[AuthGuard] Token:', session.accessToken?.substring(0, 20) + '...')
+
     redirect('/login')
   }
 
-  console.log('[AuthGuard] Session valid, allowing access to protected route')
+
 
   return <>{children}</>
 }

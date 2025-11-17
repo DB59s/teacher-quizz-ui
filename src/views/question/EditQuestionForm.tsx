@@ -13,7 +13,7 @@ import Typography from '@mui/material/Typography';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { toast } from 'react-toastify';
 
-import { fetchApi } from "@/libs/fetchApi";
+import { apiClient } from '@/libs/axios-client';
 import CustomTextField from '@/@core/components/mui/TextField';
 import CustomInputLabel from '@/components/form/CustomInputLabel';
 import PageLoading from '@/theme/PageLoading';
@@ -78,16 +78,12 @@ export default function EditQuestionForm({ questionId }: { questionId: string })
     const fetchQuestion = useCallback(async () => {
         try {
             setLoading(true);
-            console.log('Fetching question with ID:', questionId);
-            
-            const res = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/questions/${questionId}`, { method: 'GET' })
-            
-            console.log('Response status:', res.status, res.ok);
-            
-            if (!res.ok) throw new Error('Không lấy được thông tin câu hỏi')
-            const data = await res.json()
 
-            console.log('Raw response data:', data);
+            const res = await apiClient.get(`/api/v1/questions/${questionId}`)
+
+
+            const data = res.data
+
 
             setQuestionData(data || null)
             
@@ -107,30 +103,22 @@ export default function EditQuestionForm({ questionId }: { questionId: string })
                     }))
                 });
                 
-                console.log('Form reset completed');
             } else {
-                console.log('No data.data found, questionData will be null');
             }
         } catch (error) {
             console.error('Error in fetchQuestion:', error)
             toast.error('Không thể tải thông tin câu hỏi');
         } finally {
             setLoading(false);
-            console.log('Loading set to false');
         }
     }, [questionId, reset]);
 
     // Fetch danh sách môn học
     useEffect(() => {
         setLoadingSubjects(true)
-        fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/subjects?page=1&limit=100`, { method: 'GET' })
+        apiClient.get('/api/v1/subjects?page=1&limit=100')
             .then(res => {
-                if (!res.ok) throw new Error('Không lấy được danh sách môn học')
-                
-                return res.json()
-            })
-            .then(json => {
-                setSubjects(json?.data || [])
+                setSubjects(res.data?.data || [])
             })
             .catch(err => {
                 setErrorSubjects(err.message || 'Lỗi không xác định')
@@ -148,14 +136,9 @@ export default function EditQuestionForm({ questionId }: { questionId: string })
     const onSubmit = async (values: EditQuestionFormValues) => {
         try {
             setLoading(true);
-            
-            const response = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/questions/${questionId}`, {
-                method: 'PATCH',
-                body: JSON.stringify(values)
-            });
 
-            if (!response.ok) throw new Error('Cập nhật câu hỏi thất bại');
-            
+            await apiClient.patch(`/api/v1/questions/${questionId}`, values);
+
             toast.success('Cập nhật câu hỏi thành công!', { position: 'bottom-right', autoClose: 5000 });
             router.push('/question');
         } catch (error) {
@@ -166,17 +149,12 @@ export default function EditQuestionForm({ questionId }: { questionId: string })
         }
     };
 
-    // Debug logs
-    console.log('Current state - loading:', loading, 'questionData:', questionData);
     
     // Hiển thị loading khi đang fetch hoặc chưa có data
     if (loading || !questionData) {
-        console.log('Showing PageLoading because:', { loading, questionData: !!questionData });
         
         return <PageLoading show={true} />;
     }
-
-    console.log('Rendering form with questionData:', questionData);
 
     return (
         <Card className="p-6">

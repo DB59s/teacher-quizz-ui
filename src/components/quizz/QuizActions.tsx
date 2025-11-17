@@ -6,7 +6,7 @@ import { toast } from 'react-toastify'
 import Button from '@mui/material/Button'
 import Box from '@mui/material/Box'
 
-import { fetchApi } from '@/libs/fetchApi'
+import { apiClient } from '@/libs/axios-client'
 
 import type { CreateQuizFormData, CreateQuizRequest } from '@/types/quiz'
 
@@ -41,19 +41,7 @@ export default function QuizActions({ onSuccess, isLoading, setIsLoading }: Quiz
     }
 
     try {
-      const response = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/quizzes`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-
-        throw new Error(errorData.message || 'Tạo quiz thất bại')
-      }
+      await apiClient.post('/api/v1/quizzes', payload)
 
       toast.success('Tạo quiz thành công!', {
         position: 'bottom-right'
