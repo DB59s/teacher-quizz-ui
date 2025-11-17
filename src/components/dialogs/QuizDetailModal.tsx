@@ -22,6 +22,9 @@ import { getQuizDetail, type QuizDetail, type Question } from '@/services/quiz.s
 // Component Imports
 import PageLoading from '@/theme/PageLoading'
 
+// Utils Imports
+import { formatDateVN } from '@/utils/dateFormat'
+
 type QuizDetailModalProps = {
   open: boolean
   onClose: () => void
@@ -78,25 +81,35 @@ const QuizDetailModal = ({ open, onClose, quizId }: QuizDetailModalProps) => {
             Đáp án:
           </Typography>
           <Box className='space-y-2'>
-            {question.answers.map((answer, answerIndex) => (
-              <Box
-                key={answer.id}
-                sx={{
-                  p: 2,
-                  borderRadius: 1,
-                  border: 1,
-                  borderColor: answer.is_true ? 'success.main' : 'divider',
-                  bgcolor: answer.is_true ? 'success.light' : 'action.hover'
-                }}
-              >
-                <Box className='flex items-center gap-2'>
-                  <Typography variant='body1'>
-                    {String.fromCharCode(65 + answerIndex)}. {answer.content}
-                  </Typography>
-                  {answer.is_true && <Chip label='Đúng' size='small' color='success' sx={{ ml: 'auto' }} />}
+            {question.answers.map((answer, answerIndex) => {
+              const isMultipleChoice = String(question.type) === '2'
+              const inputType = isMultipleChoice ? 'checkbox' : 'radio'
+
+              return (
+                <Box
+                  key={answer.id}
+                  sx={{
+                    p: 2,
+                    borderRadius: 1,
+                    border: 1,
+                    borderColor: answer.is_true ? 'success.main' : 'divider',
+                    bgcolor: answer.is_true ? 'success.light' : 'action.hover'
+                  }}
+                >
+                  <Box className='flex items-center gap-2'>
+                    <input
+                      type={inputType}
+                      checked={answer.is_true}
+                      disabled
+                      readOnly
+                      style={{ cursor: 'not-allowed' }}
+                    />
+                    <Typography variant='body1'>{answer.content}</Typography>
+                    {answer.is_true && <Chip label='Đúng' size='small' color='success' sx={{ ml: 'auto' }} />}
+                  </Box>
                 </Box>
-              </Box>
-            ))}
+              )
+            })}
           </Box>
         </CardContent>
       </Card>
@@ -128,10 +141,10 @@ const QuizDetailModal = ({ open, onClose, quizId }: QuizDetailModalProps) => {
                 </Typography>
                 <Box className='flex gap-4 mt-3'>
                   <Typography variant='caption' color='text.secondary'>
-                    Tạo ngày: {new Date(quizDetail.created_at).toLocaleString('vi-VN')}
+                    Tạo ngày: {formatDateVN(quizDetail.created_at, true)}
                   </Typography>
                   <Typography variant='caption' color='text.secondary'>
-                    Cập nhật: {new Date(quizDetail.updated_at).toLocaleString('vi-VN')}
+                    Cập nhật: {formatDateVN(quizDetail.updated_at, true)}
                   </Typography>
                 </Box>
               </CardContent>

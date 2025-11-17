@@ -47,6 +47,8 @@ export default function ModalCreateQuestion({ type, open, setOpen, questionId }:
     control,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors }
   } = useForm<CreateQuestionFormValues>({
     defaultValues: {
@@ -57,6 +59,8 @@ export default function ModalCreateQuestion({ type, open, setOpen, questionId }:
       answers: [{ content: '', is_true: false }]
     }
   })
+
+  const questionType = watch('type')
 
   const [loadingQuestion, setLoadingQuestion] = useState(false)
   const router = useRouter()
@@ -212,17 +216,25 @@ export default function ModalCreateQuestion({ type, open, setOpen, questionId }:
                 <Controller
                   name='level'
                   control={control}
-                  rules={{ required: 'Mức độ là bắt buộc', min: { value: 1, message: 'Tối thiểu là 1' } }}
+                  rules={{ required: 'Mức độ là bắt buộc' }}
                   render={({ field }) => (
-                    <CustomTextField
+                    <Select
                       {...field}
-                      type='number'
-                      placeholder='Nhập mức độ'
+                      value={field.value}
+                      onChange={e => field.onChange(e.target.value)}
                       error={!!errors.level}
-                      helperText={errors.level?.message}
-                    />
+                      displayEmpty
+                    >
+                      <MenuItem value={1}>Mức 1 - Dễ</MenuItem>
+                      <MenuItem value={2}>Mức 2 - Trung bình</MenuItem>
+                      <MenuItem value={3}>Mức 3 - Khó</MenuItem>
+                      <MenuItem value={4}>Mức 4 - Rất khó</MenuItem>
+                    </Select>
                   )}
                 />
+                {errors.level && (
+                  <span style={{ color: 'red', fontSize: '0.75rem', marginTop: '4px' }}>{errors.level.message}</span>
+                )}
               </Grid>
               <Grid size={{ xs: 12 }} className='flex flex-col'>
                 <CustomInputLabel required>Loại câu hỏi</CustomInputLabel>
@@ -277,16 +289,30 @@ export default function ModalCreateQuestion({ type, open, setOpen, questionId }:
                       name={`answers.${idx}.is_true` as const}
                       control={control}
                       render={({ field }) => (
-                        <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <input
-                            type='checkbox'
-                            name={field.name}
-                            ref={field.ref}
-                            checked={field.value}
-                            onChange={e => field.onChange(e.target.checked)}
-                            onBlur={field.onBlur}
-                            disabled={field.disabled}
-                          />
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: '80px' }}>
+                          {questionType === 1 ? (
+                            <input
+                              type='radio'
+                              name='correct_answer'
+                              checked={field.value}
+                              onChange={() => {
+                                // Uncheck all other answers
+                                fields.forEach((_, i) => {
+                                  setValue(`answers.${i}.is_true`, i === idx)
+                                })
+                              }}
+                            />
+                          ) : (
+                            <input
+                              type='checkbox'
+                              name={field.name}
+                              ref={field.ref}
+                              checked={field.value}
+                              onChange={e => field.onChange(e.target.checked)}
+                              onBlur={field.onBlur}
+                              disabled={field.disabled}
+                            />
+                          )}
                           Đúng
                         </label>
                       )}

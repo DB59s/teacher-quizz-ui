@@ -2,7 +2,7 @@ import axios from 'axios'
 
 import { getSession } from 'next-auth/react'
 
-const API_BASE_URL = 'https://api.vuquangduy.io.vn'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 export interface Answer {
   id: string
@@ -65,7 +65,7 @@ export const getQuestionDetail = async (questionId: string): Promise<QuestionDet
     throw new Error('Failed to fetch question detail: Invalid response format')
   } catch (error: any) {
     console.error('Error fetching question detail:', error)
-    
+
     if (error.response) {
       console.error('Response status:', error.response.status)
       console.error('Response data:', error.response.data)

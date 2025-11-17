@@ -6,7 +6,7 @@ const isClient = typeof window !== 'undefined'
 
 // Create axios instance
 const axiosClient: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://api.vuquangduy.io.vn',
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json'

@@ -35,30 +35,29 @@ export default function ClassPage({ params }: { params: Promise<{ classId: strin
   const unwrappedParams = React.use(params)
   const classId = unwrappedParams.classId
 
-  useEffect(() => {
-    let isMounted = true
-
-    setLoading(true)
-    fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/classes/details/${classId}`, { method: 'GET' })
-      .then(res => {
-        if (!res.ok) throw new Error('Không lấy được thông tin lớp học')
-
-        return res.json()
-      })
-      .then(json => {
-        if (isMounted) setData(json?.data || null)
-      })
-      .catch(err => {
-        if (isMounted) setError(err.message || 'Lỗi không xác định')
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false)
+  const fetchClassData = useCallback(async () => {
+    try {
+      setLoading(true)
+      const res = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/classes/details/${classId}`, {
+        method: 'GET'
       })
 
-    return () => {
-      isMounted = false
+      if (!res.ok) throw new Error('Không lấy được thông tin lớp học')
+
+      const json = await res.json()
+
+      setData(json?.data || null)
+      setError('')
+    } catch (err: any) {
+      setError(err.message || 'Lỗi không xác định')
+    } finally {
+      setLoading(false)
     }
   }, [classId])
+
+  useEffect(() => {
+    fetchClassData()
+  }, [fetchClassData])
 
   const handleChange = useCallback(
     (event: SyntheticEvent, value: string) => {
@@ -93,10 +92,10 @@ export default function ClassPage({ params }: { params: Promise<{ classId: strin
               <Tab label={<div className='flex items-center gap-1.5'>Phê duyệt</div>} value='approval' />
             </CustomTabList>
             <TabPanel value={'newsfeed'} className='p-0'>
-              <Newsfeed data={data} />
+              <Newsfeed data={data} onRefresh={fetchClassData} />
             </TabPanel>
             <TabPanel value={'exercises'} className='p-0'>
-              <Exercises data={data}/>
+              <Exercises data={data} />
             </TabPanel>
             <TabPanel value={'members'} className='p-0'>
               <Members data={data} />

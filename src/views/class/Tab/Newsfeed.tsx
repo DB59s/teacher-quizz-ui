@@ -16,10 +16,15 @@ import Button from '@mui/material/Button'
 
 import UpdateClassModal from '@/components/modal/UpdateClassModal'
 
-export default function Newsfeed(data: any) {
+interface NewsfeedProps {
+  data: any
+  onRefresh?: () => void
+}
+
+export default function Newsfeed({ data, onRefresh }: NewsfeedProps) {
   const params = useParams()
   const classId = params.classId as string
-  const { name, teacher, description, class_code, status } = data.data
+  const { name, teacher, description, class_code, status } = data
   const [openModal, setOpenModal] = useState(false)
 
   return (
@@ -90,6 +95,7 @@ export default function Newsfeed(data: any) {
       <UpdateClassModal
         open={openModal}
         onClose={() => setOpenModal(false)}
+        onSuccess={onRefresh}
         classData={{
           id: classId,
           name,

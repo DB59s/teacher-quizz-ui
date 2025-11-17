@@ -15,6 +15,7 @@ import DialogCloseButton from '../dialogs/DialogCloseButton'
 import CustomTextField from '@/@core/components/mui/TextField'
 import CustomInputLabel from '../form/CustomInputLabel'
 import { fetchApi } from '@/libs/fetchApi'
+import useClass from '@/hooks/useClass'
 
 type CreateClassFormValues = {
   name: string
@@ -28,6 +29,7 @@ type ModalCreateClassProps = {
 }
 
 export default function ModalCreateClass({ open, setOpen }: ModalCreateClassProps) {
+  const { refreshClasses } = useClass()
   const {
     control,
     handleSubmit,
@@ -60,6 +62,10 @@ export default function ModalCreateClass({ open, setOpen }: ModalCreateClassProp
       }
 
       reset()
+
+      // Refresh danh sách lớp học
+      await refreshClasses()
+
       toast.success('Tạo lớp học thành công!', {
         position: 'bottom-right',
         autoClose: 5000,

@@ -7,6 +7,8 @@ import clsx from 'clsx'
 import MenuItem from '@mui/material/MenuItem'
 import { Users } from 'lucide-react'
 
+import { toast } from 'react-toastify'
+
 import useTableHead from '@/hooks/useTableHead'
 import { getClassStudents, removeStudentFromClass } from '@/services/class.service'
 
@@ -63,8 +65,16 @@ export default function Members(data: any) {
     try {
       await removeStudentFromClass(registrationId)
       await fetchClassDetails()
-    } catch (error) {
+      toast.success('Xóa học sinh khỏi lớp thành công!', {
+        position: 'bottom-right',
+        autoClose: 3000
+      })
+    } catch (error: any) {
       console.error(error)
+      toast.error(error.message || 'Xóa học sinh thất bại!', {
+        position: 'bottom-right',
+        autoClose: 3000
+      })
     } finally {
       setLoading(false)
     }
