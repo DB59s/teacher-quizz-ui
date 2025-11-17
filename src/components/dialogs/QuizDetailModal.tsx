@@ -81,7 +81,7 @@ const QuizDetailModal = ({ open, onClose, quizId }: QuizDetailModalProps) => {
             Đáp án:
           </Typography>
           <Box className='space-y-2'>
-            {question.answers.map((answer, answerIndex) => {
+            {question.answers.map(answer => {
               const isMultipleChoice = String(question.type) === '2'
               const inputType = isMultipleChoice ? 'checkbox' : 'radio'
 

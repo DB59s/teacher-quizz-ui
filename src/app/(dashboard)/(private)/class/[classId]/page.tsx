@@ -38,6 +38,7 @@ export default function ClassPage({ params }: { params: Promise<{ classId: strin
   const fetchClassData = useCallback(async () => {
     try {
       setLoading(true)
+      
       const res = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/classes/details/${classId}`, {
         method: 'GET'
       })

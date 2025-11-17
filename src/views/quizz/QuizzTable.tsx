@@ -6,7 +6,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 
 import Card from '@mui/material/Card'
-import MenuItem from '@mui/material/MenuItem'
+
+// import MenuItem from '@mui/material/MenuItem'
+
 import clsx from 'clsx'
 
 import { Edit2, Eye, Trash } from 'iconsax-react'
@@ -18,12 +20,10 @@ import useTableHead from '@/hooks/useTableHead'
 import { fetchApi } from '@/libs/fetchApi'
 import PageLoading from '@/theme/PageLoading'
 import CustomIconButton from '@/@core/components/mui/IconButton'
-import CustomTextField from '@/@core/components/mui/TextField'
 import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
 import ModalConfirmDeleteQuizz from '@/components/modal/ModalConfirmDeleteQuizz'
 import QuizDetailModal from '@/components/dialogs/QuizDetailModal'
 import EditQuizModal from '@/components/dialogs/EditQuizModal'
-import { deleteQuiz } from '@/services/quiz.service'
 import { formatDateVN } from '@/utils/dateFormat'
 
 type PaginationData = {

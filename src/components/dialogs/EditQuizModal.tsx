@@ -153,8 +153,10 @@ const EditQuizModal = ({ open, onClose, quizId, onUpdateSuccess, additionalQuest
   const handleRemoveQuestion = (questionId: string) => {
     if (selectedQuestionIds.length <= 1) {
       toast.error('Quiz phải có ít nhất 1 câu hỏi', { position: 'bottom-right', autoClose: 3000 })
+      
       return
     }
+    
     setSelectedQuestionIds(selectedQuestionIds.filter(id => id !== questionId))
     toast.success('Đã xóa câu hỏi', { position: 'bottom-right', autoClose: 2000 })
   }

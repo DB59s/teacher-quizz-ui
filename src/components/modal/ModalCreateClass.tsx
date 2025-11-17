@@ -30,6 +30,7 @@ type ModalCreateClassProps = {
 
 export default function ModalCreateClass({ open, setOpen }: ModalCreateClassProps) {
   const { refreshClasses } = useClass()
+  
   const {
     control,
     handleSubmit,
