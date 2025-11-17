@@ -44,7 +44,6 @@ export default function Members(data: any) {
     fetchClassDetails()
   }, [fetchClassDetails])
 
-  console.log('Students:', students)
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)

@@ -1,6 +1,6 @@
-import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosError } from 'axios'
+import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios'
 
-import { getSession, signOut } from 'next-auth/react'
+import { applyInterceptors } from './api-interceptors'
 
 const isClient = typeof window !== 'undefined'
 
@@ -13,64 +13,10 @@ const axiosClient: AxiosInstance = axios.create({
   }
 })
 
-// Request interceptor - Add auth token
-axiosClient.interceptors.request.use(
-  async config => {
-    if (isClient) {
-      const session = await getSession()
-      const token = (session as any)?.accessToken
-
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`
-      } else {
-        // Check if this is a protected endpoint (not login/register/forgot-password)
-        const isAuthEndpoint =
-          config.url?.includes('/auth/login') ||
-          config.url?.includes('/auth/register') ||
-          config.url?.includes('/auth/forgot-password') ||
-          config.url?.includes('/auth/verify-otp') ||
-          config.url?.includes('/auth/reset-password')
-
-        if (!isAuthEndpoint) {
-          console.log('No token found, redirecting to login...')
-
-          // Redirect to login if no token for protected endpoints
-          window.location.href = '/login'
-
-          return Promise.reject(new Error('No authentication token'))
-        }
-      }
-    }
-
-    return config
-  },
-  error => {
-    return Promise.reject(error)
-  }
-)
-
-// Response interceptor - Handle errors
-axiosClient.interceptors.response.use(
-  response => {
-    return response
-  },
-  async (error: AxiosError) => {
-    // Handle 401 Unauthorized - Token expired or missing
-    if (error.response?.status === 401) {
-      console.log('Token expired or invalid, redirecting to login...')
-
-      if (isClient) {
-        // Clear session and redirect to login
-        await signOut({
-          callbackUrl: '/login',
-          redirect: true
-        })
-      }
-    }
-
-    return Promise.reject(error)
-  }
-)
+// Apply centralized interceptors (includes auth, error handling, etc.)
+if (isClient) {
+  applyInterceptors(axiosClient)
+}
 
 // Helper functions for common requests
 export const apiClient = {

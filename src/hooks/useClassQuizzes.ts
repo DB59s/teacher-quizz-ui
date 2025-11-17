@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 
-import { fetchApi } from '@/libs/fetchApi'
+import { apiClient } from '@/libs/axios-client'
 
 type ClassQuiz = {
   id: string
@@ -43,17 +43,11 @@ export default function useClassQuizzes(classId: string | null | undefined): Use
 
     try {
       // Fetch all class quizzes without pagination to get complete list
-      const response = await fetchApi(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/class-quizzes/class/${classId}?page=1&limit=1000`,
-        {
-          method: 'GET'
-        }
+      const { data } = await apiClient.get(
+        `/api/v1/class-quizzes/class/${classId}?page=1&limit=1000`
       )
 
-      if (!response.ok) throw new Error('Failed to fetch class quizzes')
-
-      const json = await response.json()
-      const quizzes = json?.data || []
+      const quizzes = data?.data || []
 
       setClassQuizzes(quizzes)
     } catch (err) {

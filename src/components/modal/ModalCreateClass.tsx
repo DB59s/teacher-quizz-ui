@@ -14,7 +14,7 @@ import { toast } from 'react-toastify'
 import DialogCloseButton from '../dialogs/DialogCloseButton'
 import CustomTextField from '@/@core/components/mui/TextField'
 import CustomInputLabel from '../form/CustomInputLabel'
-import { fetchApi } from '@/libs/fetchApi'
+import { apiClient } from '@/libs/axios-client'
 import useClass from '@/hooks/useClass'
 
 type CreateClassFormValues = {
@@ -53,14 +53,7 @@ export default function ModalCreateClass({ open, setOpen }: ModalCreateClassProp
     setOpen(false)
 
     try {
-      const response = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/classes`, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to create class')
-      }
+      await apiClient.post('/api/v1/classes', payload)
 
       reset()
 

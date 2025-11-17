@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 
-import { fetchApi } from '@/libs/fetchApi'
+import { apiClient } from '@/libs/axios-client'
 
 interface ClassItem {
   _id: string
@@ -29,11 +29,7 @@ export function ClassProvider({ children }: { children: React.ReactNode }) {
   const fetchClasses = useCallback(async () => {
     try {
       setLoading(true)
-      const res = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/classes/teachers`)
-
-      if (!res.ok) throw new Error('Failed to fetch classes')
-
-      const data = await res.json()
+      const { data } = await apiClient.get('/api/v1/classes/teachers')
 
       setClasses(data?.data?.classes || [])
       setError(null)

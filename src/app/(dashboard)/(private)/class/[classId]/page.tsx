@@ -13,7 +13,7 @@ import Tab from '@mui/material/Tab'
 import TabContext from '@mui/lab/TabContext'
 import TabPanel from '@mui/lab/TabPanel'
 
-import { fetchApi } from '@/libs/fetchApi'
+import { apiClient } from '@/libs/axios-client'
 
 // Component Imports
 import CustomTabList from '@core/components/mui/TabList'
@@ -38,16 +38,10 @@ export default function ClassPage({ params }: { params: Promise<{ classId: strin
   const fetchClassData = useCallback(async () => {
     try {
       setLoading(true)
-      
-      const res = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/classes/details/${classId}`, {
-        method: 'GET'
-      })
 
-      if (!res.ok) throw new Error('Không lấy được thông tin lớp học')
+      const res = await apiClient.get(`/api/v1/classes/details/${classId}`)
 
-      const json = await res.json()
-
-      setData(json?.data || null)
+      setData(res.data?.data || null)
       setError('')
     } catch (err: any) {
       setError(err.message || 'Lỗi không xác định')

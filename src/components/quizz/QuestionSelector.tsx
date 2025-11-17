@@ -12,7 +12,7 @@ import Chip from '@mui/material/Chip'
 import ListItemText from '@mui/material/ListItemText'
 import Button from '@mui/material/Button'
 
-import { fetchApi } from '@/libs/fetchApi'
+import { apiClient } from '@/libs/axios-client'
 import CustomTextField from '@/@core/components/mui/TextField'
 import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
 import PageLoading from '@/theme/PageLoading'
@@ -115,16 +115,11 @@ export default function QuestionSelector({ selectedQuestions, onSelectionChange 
       queryString.append('page', page.toString())
       queryString.append('limit', limit.toString())
 
-      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/questions${queryString.toString() ? `?${queryString.toString()}` : ''}`
+      const apiUrl = `/api/v1/questions${queryString.toString() ? `?${queryString.toString()}` : ''}`
 
-      const questionsRes = await fetchApi(apiUrl, { method: 'GET' })
+      const questionsRes = await apiClient.get(apiUrl)
 
-      if (!questionsRes.ok) {
-        setPaginationData(null)
-        throw new Error('Không lấy được danh sách câu hỏi')
-      }
-
-      const questionsData = await questionsRes.json()
+      const questionsData = questionsRes.data
       const rawQuestions: Question[] = questionsData?.data || []
 
       serverTotalItemsRef.current = questionsData?.pagination?.totalItems ?? rawQuestions.length
@@ -153,14 +148,9 @@ export default function QuestionSelector({ selectedQuestions, onSelectionChange 
   // Fetch subjects
   useEffect(() => {
     setLoadingSubjects(true)
-    fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/subjects?page=1&limit=100`, { method: 'GET' })
+    apiClient.get('/api/v1/subjects?page=1&limit=100')
       .then(res => {
-        if (!res.ok) throw new Error('Không lấy được danh sách môn học')
-
-        return res.json()
-      })
-      .then(json => {
-        setSubjects(json?.data || [])
+        setSubjects(res.data?.data || [])
       })
       .catch(err => {
         console.error(err)

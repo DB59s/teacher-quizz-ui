@@ -39,13 +39,13 @@ const GuestOnlyRoute = async ({ children }: ChildrenType) => {
   const session = await getServerSession(authOptions)
 
   if (!session) {
-    console.log('[GuestOnlyRoute] No session, allowing access to login page')
+
 
     return <>{children}</>
   }
 
   if (!session.accessToken) {
-    console.log('[GuestOnlyRoute] Session exists but no accessToken, allowing access to login page')
+
 
     return <>{children}</>
   }
@@ -53,13 +53,13 @@ const GuestOnlyRoute = async ({ children }: ChildrenType) => {
   const tokenExpired = isTokenExpired(session.accessToken as string)
 
   if (tokenExpired) {
-    console.log('[GuestOnlyRoute] AccessToken is expired, allowing access to login page')
+
 
     return <>{children}</>
   }
 
   // Only redirect if session exists AND has valid (non-expired) accessToken
-  console.log('[GuestOnlyRoute] Valid session found, redirecting to dashboard')
+
   redirect(themeConfig.homePageUrl)
 }
 

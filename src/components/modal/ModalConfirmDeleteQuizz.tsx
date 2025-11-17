@@ -11,7 +11,7 @@ import Typography from '@mui/material/Typography'
 
 // Component Imports
 import DialogCloseButton from '../dialogs/DialogCloseButton'
-import { fetchApi } from '@/libs/fetchApi'
+import { apiClient } from '@/libs/axios-client'
 
 type Quiz = {
   id: string
@@ -40,11 +40,7 @@ export default function ModalConfirmDeleteQuizz({
     try {
       setIsDeleting(true)
 
-      const res = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/quizzes/${quiz.id}`, {
-        method: 'DELETE'
-      })
-
-      if (!res.ok) throw new Error('Xoá quiz thất bại')
+      await apiClient.delete(`/api/v1/quizzes/${quiz.id}`)
 
       // Close modal
       setOpen(false)

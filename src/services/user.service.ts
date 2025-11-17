@@ -1,7 +1,6 @@
 import { getServerSession } from 'next-auth'
 
 import { authOptions } from '@/libs/auth'
-import { fetchApi } from '@/libs/fetchApi'
 import { apiClient } from '@/libs/axios-client'
 
 export interface UserProfileResponse {
@@ -57,15 +56,7 @@ export const getUserProfileServer = async (): Promise<UserProfileResponse['data'
  * Lấy thông tin profile của user hiện tại (Client-side)
  */
 export const getUserProfile = async (): Promise<UserProfileResponse['data']> => {
-  const response = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/me`, {
-    method: 'GET'
-  })
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch user profile')
-  }
-
-  const data: UserProfileResponse = await response.json()
+  const { data } = await apiClient.get<UserProfileResponse>('/api/v1/users/me')
 
   if (data.success && data.data) {
     return data.data

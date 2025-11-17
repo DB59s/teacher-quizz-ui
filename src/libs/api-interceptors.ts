@@ -1,8 +1,9 @@
 import { type AxiosInstance, type InternalAxiosRequestConfig } from 'axios'
 import { getServerSession } from 'next-auth'
-import { getSession, signOut } from 'next-auth/react'
+import { signOut } from 'next-auth/react'
 
 import { authOptions } from './auth' // Adjust path to your auth config
+import { getCachedSession, clearSessionCache } from './sessionCache'
 
 const isServer = typeof window === 'undefined'
 
@@ -29,8 +30,8 @@ const requestInterceptor = async (config: InternalAxiosRequestConfig) => {
 
       token = (session?.accessToken as string) || null
     } else {
-      // Client-side: get session from client
-      const clientSession = await getSession()
+      // Client-side: get session from client (with caching)
+      const clientSession = await getCachedSession()
 
       token = (clientSession?.accessToken as string) || null
     }
@@ -88,9 +89,20 @@ const responseErrorInterceptor = async (error: any) => {
   const { config, response } = error
 
   if (response?.status === 401) {
-    console.log('Token expired or invalid, handling authentication...')
 
     if (!isServer) {
+      // Clear session cache when token expires
+      clearSessionCache()
+
+      // Check if we're already on login page
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname : ''
+
+
+      if (currentPath === '/login') {
+
+        return Promise.reject(error)
+      }
+
       // Client-side only: sign out using next-auth
       // Server-side redirects should be handled by individual API functions
       await signOut({
@@ -98,7 +110,7 @@ const responseErrorInterceptor = async (error: any) => {
         redirect: true
       })
     }
-    
+
     // For server-side 401: let the caller handle the redirect
     // This prevents conflicts with component-level error handling
   }
@@ -160,6 +172,9 @@ export const applyInterceptors = (instance: AxiosInstance) => {
 // Utility function to clear auth state
 export const clearAuthState = async () => {
   if (!isServer) {
+    // Clear session cache
+    clearSessionCache()
+
     // Clear any client-side storage if needed
     localStorage.removeItem('lastVisitedPath')
     sessionStorage.clear()

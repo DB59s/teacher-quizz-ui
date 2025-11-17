@@ -13,7 +13,7 @@ import { toast } from 'react-toastify'
 
 // Component Imports
 import DialogCloseButton from '../dialogs/DialogCloseButton'
-import { fetchApi } from '@/libs/fetchApi'
+import { apiClient } from '@/libs/axios-client'
 
 
 
@@ -43,11 +43,7 @@ export default function ModalConfirmDeleteQuestion({
     try {
       setIsDeleting(true)
 
-      const res = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/questions/${question.id}`, {
-        method: 'DELETE'
-      })
-
-      if (!res.ok) throw new Error('Xoá câu hỏi thất bại')
+      await apiClient.delete(`/api/v1/questions/${question.id}`)
 
       // Show success toast
       toast.success('Xóa câu hỏi thành công', {
