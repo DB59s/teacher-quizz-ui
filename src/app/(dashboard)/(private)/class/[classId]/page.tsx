@@ -24,16 +24,18 @@ import ApprovalMember from '@views/class/Tab/ApprovalMember'
 import PageLoading from '@/theme/PageLoading'
 
 export default function ClassPage({ params }: { params: Promise<{ classId: string }> }) {
-  const [activeTab, setActiveTab] = useState('newsfeed')
-  const [data, setData] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string>('')
   const router = useRouter()
   const searchParams = useSearchParams()
 
   // Unwrap params using React.use()
   const unwrappedParams = React.use(params)
   const classId = unwrappedParams.classId
+
+  // Initialize activeTab from URL query param or default to 'newsfeed'
+  const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'newsfeed')
+  const [data, setData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string>('')
 
   const fetchClassData = useCallback(async () => {
     try {
@@ -53,6 +55,15 @@ export default function ClassPage({ params }: { params: Promise<{ classId: strin
   useEffect(() => {
     fetchClassData()
   }, [fetchClassData])
+
+  // Sync activeTab when URL query param changes (e.g., browser back/forward)
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab')
+
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl)
+    }
+  }, [searchParams, activeTab])
 
   const handleChange = useCallback(
     (event: SyntheticEvent, value: string) => {

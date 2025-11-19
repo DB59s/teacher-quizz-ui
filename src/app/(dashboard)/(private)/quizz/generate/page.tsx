@@ -1,12 +1,28 @@
+'use client'
+
 import Grid from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
+import Button from '@mui/material/Button'
+import { ArrowLeft } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 import GenerateQuizView from '@/views/quizz/GenerateQuizView'
 
 export default function GenerateQuizPage() {
+  const router = useRouter()
+
+  const handleBack = () => {
+    router.push('/quizz')
+  }
+
   return (
     <Grid container spacing={6}>
       <Grid size={{ xs: 12 }}>
+        <div className='mb-4'>
+          <Button variant='outlined' onClick={handleBack} startIcon={<ArrowLeft size={18} />}>
+            Quay lại danh sách Quiz
+          </Button>
+        </div>
         <Typography variant='h4' className='font-semibold'>
           Tạo Quiz từ AI
         </Typography>
