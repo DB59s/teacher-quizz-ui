@@ -9,10 +9,15 @@ import Grid from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
 import Card from '@mui/material/Card'
 import MenuItem from '@mui/material/MenuItem'
+import Autocomplete from '@mui/material/Autocomplete'
+import Checkbox from '@mui/material/Checkbox'
+import Chip from '@mui/material/Chip'
+import ListItemText from '@mui/material/ListItemText'
 
 import clsx from 'clsx'
 
 import { Edit2, Eye, Trash } from 'iconsax-react'
+import { FileQuestion } from 'lucide-react'
 
 import { Button } from '@mui/material'
 
@@ -21,12 +26,13 @@ import { useQueryParams } from '@/hooks/useQueryParams'
 import useTableHead from '@/hooks/useTableHead'
 
 import CustomIconButton from '@/@core/components/mui/IconButton'
-import { fetchApi } from '@/libs/fetchApi'
+import { apiClient } from '@/libs/axios-client'
 import PageLoading from '@/theme/PageLoading'
 import CustomTextField from '@/@core/components/mui/TextField'
 import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
 import ModalConfirmDeleteQuestion from '@/components/modal/ModalConfirmDeleteQuestion'
 import ModalCreateQuestion from '@/components/modal/ModalCreateQuestion'
+import QuestionDetailModal from '@/components/dialogs/QuestionDetailModal'
 
 type PaginationData = {
   page: number
@@ -42,13 +48,18 @@ export default function QuestionView() {
   const [paginationData, setPaginationData] = useState<PaginationData>(null)
   const searchParams = useSearchParams()
 
-  const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([])
-  const [loadingSubjects, setLoadingSubjects] = useState(false)
-
   // States for delete confirmation modal
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [questionToDelete, setQuestionToDelete] = useState<{ id: string; content: string } | null>(null)
   const [isModalCreateQuestionOpen, setIsModalCreateQuestionOpen] = useState(false)
+
+  // States for question detail modal
+  const [showQuestionDetailModal, setShowQuestionDetailModal] = useState(false)
+  const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null)
+
+  // States for edit question modal
+  const [isModalEditQuestionOpen, setIsModalEditQuestionOpen] = useState(false)
+  const [selectedEditQuestionId, setSelectedEditQuestionId] = useState<string | null>(null)
 
   // Lấy search params từ URL thực tế
   const currentSearchParams = useMemo(
@@ -63,6 +74,15 @@ export default function QuestionView() {
     }),
     [searchParams]
   )
+
+  const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([])
+  const [loadingSubjects, setLoadingSubjects] = useState(false)
+
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>(() =>
+    currentSearchParams.subject_id ? currentSearchParams.subject_id.split(',').filter(Boolean) : []
+  )
+
+  const [selectedLevel, setSelectedLevel] = useState<string>(currentSearchParams.level || '')
 
   const [searchTerm, setSearchTerm] = useState<string>(currentSearchParams.search || '')
 
@@ -81,21 +101,15 @@ export default function QuestionView() {
       if (currentSearchParams.level) queryString.append('level', currentSearchParams.level)
 
       // Tạo URL với query parameters
-      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/questions${queryString.toString() ? `?${queryString.toString()}` : ''}`
+      const apiUrl = `/api/v1/questions${queryString.toString() ? `?${queryString.toString()}` : ''}`
 
-      const questionsRes = await fetchApi(apiUrl, { method: 'GET' })
+      const questionsRes = await apiClient.get(apiUrl)
 
-      if (!questionsRes.ok) {
-        setPaginationData(null)
-        throw new Error('Không lấy được danh sách câu hỏi')
-      }
-
-      const questionsData = await questionsRes.json()
+      const questionsData = questionsRes.data
 
       setQuestionData(questionsData?.data || [])
 
       // Đảm bảo pagination data có page từ searchParams
-
       const paginationWithCorrectPage = {
         ...questionsData?.pagination,
         page: parseInt(currentSearchParams.page || '1'),
@@ -121,11 +135,6 @@ export default function QuestionView() {
   useEffect(() => {
     fetchQuestions()
   }, [fetchQuestions])
-
-  // Debug effect để kiểm tra searchParams
-  useEffect(() => {
-    console.log('SearchParams changed:', currentSearchParams)
-  }, [currentSearchParams])
 
   // Lắng nghe custom event để refresh khi tạo câu hỏi thành công
   useEffect(() => {
@@ -161,42 +170,35 @@ export default function QuestionView() {
     updateQueryParams(newParams)
   }
 
-  const handleSubjectChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const newSubjectId = e.target.value
-    const newParams = { ...currentSearchParams, subject_id: newSubjectId || undefined, page: '1' }
-
-    updateQueryParams(newParams)
-  }
-
   const handleLevelChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newLevel = e.target.value
-    const newParams = { ...currentSearchParams, level: newLevel || undefined, page: '1' }
+
+    setSelectedLevel(newLevel)
+  }
+
+  const handleApplySearch = () => {
+    const newParams = {
+      ...currentSearchParams,
+      search: searchTerm || undefined,
+      subject_id: selectedSubjectIds.length > 0 ? selectedSubjectIds.join(',') : undefined,
+      level: selectedLevel || undefined,
+      page: '1'
+    }
 
     updateQueryParams(newParams)
   }
 
   const handleChangeSearch = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter') {
-      const newParams = {
-        ...currentSearchParams,
-        search: searchTerm || undefined,
-        page: undefined
-      }
-
-      updateQueryParams(newParams)
+      handleApplySearch()
     }
   }
 
   useEffect(() => {
     setLoadingSubjects(true)
-    fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/subjects?page=1&limit=100`, { method: 'GET' })
+    apiClient.get('/api/v1/subjects?page=1&limit=100')
       .then(res => {
-        if (!res.ok) throw new Error('Không lấy được danh sách môn học')
-
-        return res.json()
-      })
-      .then(json => {
-        setSubjects(json?.data || [])
+        setSubjects(res.data?.data || [])
       })
       .catch(err => {
         console.error(err)
@@ -206,9 +208,28 @@ export default function QuestionView() {
       })
   }, [])
 
-  const handlePageChange = (page: number) => {
-    console.log('Page change to:', page) // Debug log
+  useEffect(() => {
+    const subjectParam = currentSearchParams.subject_id
+    const nextSelected = subjectParam ? subjectParam.split(',').filter(Boolean) : []
 
+    setSelectedSubjectIds(prev => {
+      if (prev.length === nextSelected.length && prev.every((id, index) => id === nextSelected[index])) {
+        return prev
+      }
+
+      return nextSelected
+    })
+  }, [currentSearchParams.subject_id])
+
+  useEffect(() => {
+    setSelectedLevel(currentSearchParams.level || '')
+  }, [currentSearchParams.level])
+
+  useEffect(() => {
+    setSearchTerm(currentSearchParams.search || '')
+  }, [currentSearchParams.search])
+
+  const handlePageChange = (page: number) => {
     const newParams = { ...currentSearchParams, page: page.toString() }
 
     updateQueryParams(newParams)
@@ -240,35 +261,50 @@ export default function QuestionView() {
                 placeholder='Tìm kiếm'
                 className='max-sm:is-full is-[260px] !bg-white'
               />
-              <CustomTextField
-                select
-                value={currentSearchParams?.subject_id || ''}
-                onChange={handleSubjectChange}
-                className='max-sm:is-full is-[200px] !bg-white'
-                disabled={loadingSubjects}
-                SelectProps={{
-                  displayEmpty: true,
-                  renderValue: (selected: unknown) => {
-                    if (!selected || selected === '') {
-                      return 'Tất cả môn học'
-                    }
+              <Autocomplete
+                multiple
+                disableCloseOnSelect
+                options={subjects}
+                loading={loadingSubjects}
+                getOptionLabel={option => option.name}
+                value={subjects.filter(subject => selectedSubjectIds.includes(subject.id))}
+                onChange={(_, newValue) => {
+                  const newIds = newValue.map(subject => subject.id)
 
-                    const selectedSubject = subjects.find(subject => subject.id === String(selected))
-
-                    return selectedSubject?.name || 'Tất cả môn học'
-                  }
+                  setSelectedSubjectIds(newIds)
                 }}
-              >
-                <MenuItem value=''>Tất cả môn học</MenuItem>
-                {subjects.map(subject => (
-                  <MenuItem key={subject.id} value={subject.id}>
-                    {subject.name}
-                  </MenuItem>
-                ))}
-              </CustomTextField>
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => {
+                    const { key, ...tagProps } = getTagProps({ index })
+                    
+                    return <Chip key={key} label={option.name} {...tagProps} size='small' />
+                    
+                  })
+                }
+                renderOption={(props, option, { selected }) => {
+                  const { key, ...optionProps } = props
+
+                  return (
+                    <li key={key} {...optionProps}>
+                      <Checkbox checked={selected} />
+                      <ListItemText primary={option.name} />
+                    </li>
+                  )
+                }}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                renderInput={params => (
+                  <CustomTextField
+                    {...params}
+                    placeholder='Môn học liên quan'
+                    className='max-sm:is-full is-[260px] !bg-white'
+                  />
+                )}
+                noOptionsText='Không tìm thấy môn học phù hợp'
+                loadingText='Đang tải danh sách môn học...'
+              />
               <CustomTextField
                 select
-                value={currentSearchParams?.level || ''}
+                value={selectedLevel}
                 onChange={handleLevelChange}
                 className='max-sm:is-full is-[150px] !bg-white'
                 SelectProps={{
@@ -288,18 +324,9 @@ export default function QuestionView() {
                 <MenuItem value='3'>3</MenuItem>
                 <MenuItem value='4'>4</MenuItem>
               </CustomTextField>
-            </div>
-            <div className='flex flex-wrap items-center max-sm:flex-col gap-3'>
-              <CustomTextField
-                select
-                value={currentSearchParams?.limit || '10'}
-                onChange={handleLimitChange}
-                className='flex-auto is-[70px] max-sm:is-full'
-              >
-                <MenuItem value='10'>10</MenuItem>
-                <MenuItem value='25'>25</MenuItem>
-                <MenuItem value='50'>50</MenuItem>
-              </CustomTextField>
+              <Button variant='contained' color='primary' onClick={handleApplySearch} className='!max-sm:is-full'>
+                Tìm kiếm
+              </Button>
             </div>
           </div>
           <div className='overflow-x-auto w-full'>
@@ -328,13 +355,22 @@ export default function QuestionView() {
                       <td className='px-3 py-3 text-center'>{index + 1}</td>
                       <td className='action px-3 py-3'>
                         <div className='flex items-center justify-center gap-2'>
-                          <CustomIconButton size='small' onClick={() => {}}>
+                          <CustomIconButton
+                            size='small'
+                            onClick={() => {
+                              setSelectedQuestionId(item.id)
+                              setShowQuestionDetailModal(true)
+                            }}
+                          >
                             <Eye size={18} color='#000' />
                           </CustomIconButton>
 
                           <CustomIconButton
                             size='small'
-                            href={item?.id ? `/question/${item?.id}/edit` : ''}
+                            onClick={() => {
+                              setSelectedEditQuestionId(item.id)
+                              setIsModalEditQuestionOpen(true)
+                            }}
                             color='primary'
                           >
                             <Edit2 size={18} color='#000' />
@@ -356,8 +392,9 @@ export default function QuestionView() {
                 ) : (
                   <tr>
                     <td colSpan={100}>
-                      <div className='flex h-28 select-none items-center justify-center text-4.5xl font-semibold text-grey-100'>
-                        Không có câu hỏi nào
+                      <div className='flex h-28 select-none items-center justify-center flex-col gap-2'>
+                        <FileQuestion size={48} className='text-grey-200' />
+                        <span className='text-4.5xl text-grey-100'>Không có câu hỏi nào</span>
                       </div>
                     </td>
                   </tr>
@@ -366,7 +403,12 @@ export default function QuestionView() {
             </table>
           </div>
           {paginationData && (
-            <TableRCPaginationCustom pagination={paginationData} onChangePage={page => handlePageChange(page)} />
+            <TableRCPaginationCustom
+              pagination={paginationData}
+              onChangePage={page => handlePageChange(page)}
+              onLimitChange={handleLimitChange}
+              showLimitSelector={true}
+            />
           )}
         </Card>
       </Grid>
@@ -378,6 +420,26 @@ export default function QuestionView() {
         onDeleteSuccess={handleDeleteSuccess}
       />
       <ModalCreateQuestion type='create' open={isModalCreateQuestionOpen} setOpen={setIsModalCreateQuestionOpen} />
+      <ModalCreateQuestion
+        type='edit'
+        open={isModalEditQuestionOpen}
+        setOpen={open => {
+          setIsModalEditQuestionOpen(open)
+
+          if (!open) {
+            setSelectedEditQuestionId(null)
+          }
+        }}
+        questionId={selectedEditQuestionId}
+      />
+      <QuestionDetailModal
+        open={showQuestionDetailModal}
+        onClose={() => {
+          setShowQuestionDetailModal(false)
+          setSelectedQuestionId(null)
+        }}
+        questionId={selectedQuestionId}
+      />
     </Grid>
   )
 }

@@ -13,46 +13,6 @@ interface LogicCredentials {
   password: string
 }
 
-// Helper function to decode JWT and check if expired
-function isTokenExpired(token: string): boolean {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
-
-    const currentTime = Math.floor(Date.now() / 1000)
-
-    return payload.exp < currentTime
-  } catch {
-    return true // If can't decode, assume expired
-  }
-}
-
-async function refreshAccessToken(refreshToken: string) {
-  try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/refresh`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ refreshToken })
-    })
-
-    if (!response.ok) {
-      throw new Error('Failed to refresh token')
-    }
-
-    const data = await response.json()
-
-    return {
-      accessToken: data.accessToken,
-      refreshToken: data.refreshToken || refreshToken
-    }
-  } catch (error) {
-    console.error('Error refreshing token:', error)
-
-    return null
-  }
-}
-
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as Adapter,
 
@@ -121,8 +81,7 @@ export const authOptions: NextAuthOptions = {
               full_name: data.user.full_name,
               role: data.user.role,
               user_id: data.user.user_id,
-              accessToken: data.accessToken,
-              refreshToken: data.refreshToken
+              accessToken: data.accessToken
             }
           }
 
@@ -182,21 +141,7 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role
         token.user_id = user.user_id
         token.accessToken = user.accessToken
-        token.refreshToken = user.refreshToken
         token.full_name = user.full_name
-      }
-
-      // Check if access token is expired and refresh if needed
-      if (token.accessToken && isTokenExpired(token.accessToken as string)) {
-        const refreshedTokens = await refreshAccessToken(token.refreshToken as string)
-
-        if (refreshedTokens) {
-          token.accessToken = refreshedTokens.accessToken
-          token.refreshToken = refreshedTokens.refreshToken
-        } else {
-          // If refresh failed, return token as is (user will need to re-login)
-          console.warn('Token refresh failed, user may need to re-login')
-        }
       }
 
       return token
@@ -205,7 +150,6 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         // ** Add custom params to user in session which are added in `jwt()` callback via `token` parameter
         session.accessToken = token.accessToken
-        session.refreshToken = token.refreshToken
         session.user.id = token.id
         session.user.email = token.email
         session.user.role = token.role

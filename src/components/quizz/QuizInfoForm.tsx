@@ -72,7 +72,7 @@ export default function QuizInfoForm() {
           <Grid size={{ xs: 12 }}>
             <CustomInputLabel required>Thời gian làm bài (phút)</CustomInputLabel>
             <Controller
-              name='duration'
+              name='total_time'
               control={control}
               rules={{
                 required: 'Vui lòng nhập thời gian làm bài',
@@ -87,8 +87,8 @@ export default function QuizInfoForm() {
                   type='number'
                   fullWidth
                   placeholder='Nhập thời gian làm bài'
-                  error={!!errors.duration}
-                  helperText={errors.duration?.message}
+                  error={!!errors.total_time}
+                  helperText={errors.total_time?.message}
                   onChange={e => field.onChange(parseInt(e.target.value) || 0)}
                 />
               )}

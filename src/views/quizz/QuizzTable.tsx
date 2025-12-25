@@ -6,19 +6,25 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 
 import Card from '@mui/material/Card'
-import MenuItem from '@mui/material/MenuItem'
+
+// import MenuItem from '@mui/material/MenuItem'
+
 import clsx from 'clsx'
 
 import { Edit2, Eye, Trash } from 'iconsax-react'
+import { Inbox } from 'lucide-react'
+import { toast } from 'react-toastify'
 
 import { useQueryParams } from '@/hooks/useQueryParams'
 import useTableHead from '@/hooks/useTableHead'
-import { fetchApi } from '@/libs/fetchApi'
+import { apiClient } from '@/libs/axios-client'
 import PageLoading from '@/theme/PageLoading'
 import CustomIconButton from '@/@core/components/mui/IconButton'
-import CustomTextField from '@/@core/components/mui/TextField'
 import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
 import ModalConfirmDeleteQuizz from '@/components/modal/ModalConfirmDeleteQuizz'
+import QuizDetailModal from '@/components/dialogs/QuizDetailModal'
+import EditQuizModal from '@/components/dialogs/EditQuizModal'
+import { formatDateVN } from '@/utils/dateFormat'
 
 type PaginationData = {
   page: number
@@ -38,6 +44,14 @@ export default function QuizzTable() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [quizToDelete, setQuizToDelete] = useState<{ id: string; name: string; description?: string } | null>(null)
 
+  // States for quiz detail modal
+  const [showQuizDetailModal, setShowQuizDetailModal] = useState(false)
+  const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null)
+
+  // States for edit quiz modal
+  const [showEditQuizModal, setShowEditQuizModal] = useState(false)
+  const [selectedEditQuizId, setSelectedEditQuizId] = useState<string | null>(null)
+
   // Lấy search params từ URL
   const currentSearchParams = useMemo(
     () => ({
@@ -56,14 +70,11 @@ export default function QuizzTable() {
       if (currentSearchParams.page) queryString.append('page', currentSearchParams.page)
       if (currentSearchParams.limit) queryString.append('limit', currentSearchParams.limit)
 
-      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/quizzes${queryString.toString() ? `?${queryString.toString()}` : ''}`
+      const apiUrl = `/api/v1/quizzes${queryString.toString() ? `?${queryString.toString()}` : ''}`
 
-      const response = await fetchApi(apiUrl, {
-        method: 'GET'
-      })
+      const response = await apiClient.get(apiUrl)
 
-      if (!response.ok) throw new Error('Failed to fetch quizzes')
-      const json = await response.json()
+      const json = response.data
 
       setQuizzes(json?.data || [])
 
@@ -109,6 +120,11 @@ export default function QuizzTable() {
   }
 
   const handleDeleteSuccess = () => {
+    toast.success('Xóa quiz thành công!', {
+      position: 'bottom-right',
+      autoClose: 3000
+    })
+
     // Reset states
     setQuizToDelete(null)
     setShowDeleteDialog(false)
@@ -117,25 +133,9 @@ export default function QuizzTable() {
     fetchQuizzes()
   }
 
-  console.log('Quizzes:', quizzes)
-
   return (
     <Card>
       <PageLoading show={loading} />
-      <div className='flex flex-col lg:flex-row flex-wrap justify-between gap-3 p-6'>
-        <div className='flex flex-wrap items-center max-sm:flex-col gap-3 max-sm:is-full is-auto'>
-          <CustomTextField
-            select
-            value={currentSearchParams?.limit || '10'}
-            onChange={handleLimitChange}
-            className='flex-auto is-[70px]'
-          >
-            <MenuItem value='10'>10</MenuItem>
-            <MenuItem value='25'>25</MenuItem>
-            <MenuItem value='50'>50</MenuItem>
-          </CustomTextField>
-        </div>
-      </div>
       <div className='overflow-x-auto w-full'>
         <table className='w-full min-w-max table-auto text-left text-sm border-spacing-0'>
           <thead>
@@ -156,41 +156,75 @@ export default function QuizzTable() {
             </tr>
           </thead>
           <tbody>
-            {quizzes.map((quiz: any, index: number) => {
-              const key = quiz.id || quiz._id || `quiz-${index}`
+            {quizzes && quizzes.length > 0 ? (
+              quizzes.map((quiz: any, index: number) => {
+                const key = quiz.id || quiz._id || `quiz-${index}`
+                const currentPage = parseInt(currentSearchParams.page || '1')
+                const limit = parseInt(currentSearchParams.limit || '10')
+                const stt = (currentPage - 1) * limit + index + 1
 
-              return (
-                <tr key={key} className='border-t border-grey-200 hover:bg-grey-100'>
-                  <td className='px-3 py-4 text-center'>{index + 1}</td>
-                  <td className='action px-3 py-3'>
-                    <div className='flex items-center justify-center gap-2'>
-                      <CustomIconButton size='small' onClick={() => {}}>
-                        <Eye size={18} color='#000' />
-                      </CustomIconButton>
+                return (
+                  <tr key={key} className='border-t border-grey-200 hover:bg-grey-100'>
+                    <td className='px-3 py-4 text-center'>{stt}</td>
+                    <td className='action px-3 py-3'>
+                      <div className='flex items-center justify-center gap-2'>
+                        <CustomIconButton
+                          size='small'
+                          onClick={() => {
+                            setSelectedQuizId(quiz.id || quiz._id)
+                            setShowQuizDetailModal(true)
+                          }}
+                        >
+                          <Eye size={18} color='#000' />
+                        </CustomIconButton>
 
-                      <CustomIconButton size='small' color='primary'>
-                        <Edit2 size={18} color='#000' />
-                      </CustomIconButton>
+                        <CustomIconButton
+                          size='small'
+                          color='primary'
+                          onClick={() => {
+                            setSelectedEditQuizId(quiz.id || quiz._id)
+                            setShowEditQuizModal(true)
+                          }}
+                        >
+                          <Edit2 size={18} color='#000' />
+                        </CustomIconButton>
 
-                      <CustomIconButton size='small' onClick={handleDeleteQuiz(quiz)}>
-                        <Trash size={18} color='#ED0909' />
-                      </CustomIconButton>
-                    </div>
-                  </td>
-                  <td className='px-3 py-4 text-center'>{quiz.name}</td>
-                  <td className='px-3 py-4 text-center'>10</td>
-                  <td className='px-3 py-4 text-center'>30 phút</td>
-                  <td className='px-3 py-4 text-center'>{new Date(quiz.created_at).toLocaleDateString('vi-VN')}</td>
-                  <td className='px-3 py-4 text-center'>{new Date(quiz.updated_at).toLocaleDateString('vi-VN')}</td>
-                </tr>
-              )
-            })}
+                        <CustomIconButton size='small' onClick={handleDeleteQuiz(quiz)}>
+                          <Trash size={18} color='#ED0909' />
+                        </CustomIconButton>
+                      </div>
+                    </td>
+                    <td className='px-3 py-4 text-center'>{quiz.name}</td>
+                    <td className='px-3 py-4 text-center'>{quiz.total_question || 0}</td>
+                    <td className='px-3 py-4 text-center'>
+                      {quiz.total_time ? Math.round(quiz.total_time / 60) : 0} phút
+                    </td>
+                    <td className='px-3 py-4 text-center'>{formatDateVN(quiz.created_at)}</td>
+                    <td className='px-3 py-4 text-center'>{formatDateVN(quiz.updated_at)}</td>
+                  </tr>
+                )
+              })
+            ) : (
+              <tr>
+                <td colSpan={100}>
+                  <div className='flex h-28 select-none items-center justify-center flex-col gap-2'>
+                    <Inbox size={48} className='text-grey-200' />
+                    <span className='text-4.5xl text-grey-100'>Không có dữ liệu</span>
+                  </div>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
 
       {paginationData && (
-        <TableRCPaginationCustom pagination={paginationData} onChangePage={page => handlePageChange(page)} />
+        <TableRCPaginationCustom
+          pagination={paginationData}
+          onChangePage={page => handlePageChange(page)}
+          onLimitChange={handleLimitChange}
+          showLimitSelector={true}
+        />
       )}
 
       {/* Delete Confirmation Modal */}
@@ -199,6 +233,29 @@ export default function QuizzTable() {
         setOpen={setShowDeleteDialog}
         quiz={quizToDelete}
         onDeleteSuccess={handleDeleteSuccess}
+      />
+
+      {/* Quiz Detail Modal */}
+      <QuizDetailModal
+        open={showQuizDetailModal}
+        onClose={() => {
+          setShowQuizDetailModal(false)
+          setSelectedQuizId(null)
+        }}
+        quizId={selectedQuizId}
+      />
+
+      {/* Edit Quiz Modal */}
+      <EditQuizModal
+        open={showEditQuizModal}
+        onClose={() => {
+          setShowEditQuizModal(false)
+          setSelectedEditQuizId(null)
+        }}
+        quizId={selectedEditQuizId}
+        onUpdateSuccess={() => {
+          fetchQuizzes()
+        }}
       />
     </Card>
   )

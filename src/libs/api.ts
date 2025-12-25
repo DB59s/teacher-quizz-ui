@@ -162,14 +162,14 @@ export const api = async (input: string, init: AxiosRequestConfig = {}) => {
       response?.status === HTTP_ERROR_CODE.UNAUTHORIZED ||
       response?.data?.statusCode === HTTP_ERROR_CODE.UNAUTHORIZED
     ) {
-      console.log('Unauthorized access, redirecting to sign in...')
+
 
       return await handleAuthError(error)
     }
 
     // Handle 403 Forbidden
     if (response?.status === HTTP_ERROR_CODE.FORBIDDEN || response?.data?.statusCode === HTTP_ERROR_CODE.FORBIDDEN) {
-      console.log('Forbidden access, redirecting to 403...')
+
 
       return handleForbiddenError()
     }
@@ -244,7 +244,7 @@ export const serverApi = async (input: string, init: AxiosRequestConfig = {}) =>
     const { response } = error
 
     if (response?.status === HTTP_ERROR_CODE.UNAUTHORIZED) {
-      redirect('/auth/signin')
+      redirect('/login')
     }
 
     if (response?.status === HTTP_ERROR_CODE.FORBIDDEN) {

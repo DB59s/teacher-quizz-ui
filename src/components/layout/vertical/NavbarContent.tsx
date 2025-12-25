@@ -7,7 +7,8 @@ import classnames from 'classnames'
 import type { NotificationsType } from '@components/layout/shared/NotificationsDropdown'
 
 // Component Imports
-// import NavToggle from './NavToggle'
+import NavToggle from './NavToggle'
+
 // import NavSearch from '@components/layout/shared/search'
 //
 // import ModeDropdown from '@components/layout/shared/ModeDropdown'
@@ -109,11 +110,11 @@ const notifications: NotificationsType[] = [
 
 const NavbarContent = () => {
   return (
-    <div className={classnames(verticalLayoutClasses.navbarContent, 'flex items-center justify-end gap-4 is-full')}>
-      {/* <div className='flex items-center gap-4'>
+    <div className={classnames(verticalLayoutClasses.navbarContent, 'flex items-center justify-between gap-4 is-full')}>
+      <div className='flex items-center gap-4'>
         <NavToggle />
-        <NavSearch />
-      </div> */}
+        {/* <NavSearch /> */}
+      </div>
       <div className='flex items-center'>
         {/* <ModeDropdown />
         <ShortcutsDropdown shortcuts={shortcuts} /> */}

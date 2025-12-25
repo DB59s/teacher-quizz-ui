@@ -3,7 +3,6 @@ import { useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 
 const useTableHead = () => {
-
   const pathname = usePathname()
 
   const TABLE_HEAD = useCallback(() => {
@@ -14,7 +13,7 @@ const useTableHead = () => {
     if (isQuestionPath) {
       return [
         {
-          name: '#',
+          name: 'STT',
           position: 'center',
           sortable: false,
           field: 'index'
@@ -23,7 +22,7 @@ const useTableHead = () => {
           name: 'Hành động',
           position: 'center',
           sortable: false,
-          field: 'actions',
+          field: 'actions'
         },
         {
           name: 'Nội dung',
@@ -56,7 +55,7 @@ const useTableHead = () => {
     if (isQuizzPath) {
       return [
         {
-          name: '#',
+          name: 'STT',
           position: 'center',
           sortable: false,
           field: 'index'
@@ -65,13 +64,13 @@ const useTableHead = () => {
           name: 'Hành động',
           position: 'center',
           sortable: false,
-          field: 'actions',
+          field: 'actions'
         },
         {
           name: 'Nội dung',
           position: 'center',
           sortable: false,
-          field: 'name',
+          field: 'name'
         },
         {
           name: 'Số câu hỏi',
@@ -103,7 +102,7 @@ const useTableHead = () => {
     if (isClassPath) {
       return [
         {
-          name: '#',
+          name: 'STT',
           position: 'center',
           sortable: false,
           field: 'index'
@@ -130,10 +129,10 @@ const useTableHead = () => {
           minWidth: 200
         },
         {
-          name: 'Số điện thoại',
+          name: 'Hành động',
           position: 'center',
           sortable: false,
-          field: 'phone_number',
+          field: 'status',
           minWidth: 150
         }
       ]

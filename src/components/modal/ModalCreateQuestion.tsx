@@ -13,6 +13,7 @@ type ModalCreateQuestionProps = {
   type: 'create' | 'edit'
   open: boolean
   setOpen: (open: boolean) => void
+  questionId?: string | null
 }
 
 // React Imports
@@ -29,8 +30,7 @@ import DialogActions from '@mui/material/DialogActions'
 import Button from '@mui/material/Button'
 import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
-import Checkbox from '@mui/material/Checkbox'
-import ListItemText from '@mui/material/ListItemText'
+import Typography from '@mui/material/Typography'
 import { useForm, Controller, useFieldArray } from 'react-hook-form'
 
 import { toast } from 'react-toastify'
@@ -39,13 +39,16 @@ import { toast } from 'react-toastify'
 import CustomTextField from '@/@core/components/mui/TextField'
 import CustomInputLabel from '../form/CustomInputLabel'
 import DialogCloseButton from '../dialogs/DialogCloseButton'
-import { fetchApi } from '@/libs/fetchApi'
+import SubjectAutocomplete from '../form/SubjectAutocomplete'
+import { apiClient } from '@/libs/axios-client'
 
-export default function ModalCreateQuestion({ type, open, setOpen }: ModalCreateQuestionProps) {
+export default function ModalCreateQuestion({ type, open, setOpen, questionId }: ModalCreateQuestionProps) {
   const {
     control,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors }
   } = useForm<CreateQuestionFormValues>({
     defaultValues: {
@@ -57,31 +60,61 @@ export default function ModalCreateQuestion({ type, open, setOpen }: ModalCreate
     }
   })
 
-  const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([])
-  const [loadingSubjects, setLoadingSubjects] = useState(false)
-  const [errorSubjects, setErrorSubjects] = useState('')
+  const questionType = watch('type')
+
+  const [loadingQuestion, setLoadingQuestion] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
   const isQuestionPath = /question/.test(pathname || '')
 
+  // Fetch question data when editing
   useEffect(() => {
-    setLoadingSubjects(true)
-    fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/subjects?page=1&limit=100`, { method: 'GET' })
-      .then(res => {
-        if (!res.ok) throw new Error('Không lấy được danh sách môn học')
+    if (open && type === 'edit' && questionId) {
+      fetchQuestionData()
+    } else if (open && type === 'create') {
+      // Reset form when opening create modal
+      reset({
+        content: '',
+        level: 1,
+        type: 1,
+        subject_ids: [],
+        answers: [{ content: '', is_true: false }]
+      })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, type, questionId])
 
-        return res.json()
+  const fetchQuestionData = async () => {
+    if (!questionId) return
+
+    setLoadingQuestion(true)
+
+    try {
+      const res = await apiClient.get(`/api/v1/questions/${questionId}`)
+
+      const question = res.data as any
+
+      // Fill form with question data
+      reset({
+        content: question.content || '',
+        level: question.level || 1,
+        type: parseInt(question.type) || 1,
+        subject_ids: question.subject_ids || [],
+        answers:
+          question.answers && question.answers.length > 0
+            ? question.answers.map((ans: any) => ({
+                content: ans.content || '',
+                is_true: ans.is_true || false
+              }))
+            : [{ content: '', is_true: false }]
       })
-      .then(json => {
-        setSubjects(json?.data || [])
-      })
-      .catch(err => {
-        setErrorSubjects(err.message || 'Lỗi không xác định')
-      })
-      .finally(() => {
-        setLoadingSubjects(false)
-      })
-  }, [])
+    } catch (error) {
+      console.error('Error fetching question:', error)
+      toast.error('Không thể tải thông tin câu hỏi')
+    } finally {
+      setLoadingQuestion(false)
+    }
+  }
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -92,13 +125,16 @@ export default function ModalCreateQuestion({ type, open, setOpen }: ModalCreate
     setOpen(false)
 
     try {
-      const response = await fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/questions`, {
-        method: 'POST',
-        body: JSON.stringify(values)
-      })
+      if (type === 'edit' && questionId) {
+        // Update existing question
+        await apiClient.patch(`/api/v1/questions/${questionId}`, values)
+        toast.success('Cập nhật câu hỏi thành công!', { position: 'bottom-right', autoClose: 5000 })
+      } else {
+        // Create new question
+        await apiClient.post('/api/v1/questions', values)
+        toast.success('Tạo câu hỏi thành công!', { position: 'bottom-right', autoClose: 5000 })
+      }
 
-      if (!response.ok) throw new Error('Tạo câu hỏi thất bại')
-      toast.success('Tạo câu hỏi thành công!', { position: 'bottom-right', autoClose: 5000 })
       reset()
 
       if (isQuestionPath) {
@@ -107,7 +143,7 @@ export default function ModalCreateQuestion({ type, open, setOpen }: ModalCreate
         router.push('/question')
       }
     } catch (error) {
-      toast.error('Có lỗi xảy ra khi tạo câu hỏi')
+      toast.error(type === 'edit' ? 'Có lỗi xảy ra khi cập nhật câu hỏi' : 'Có lỗi xảy ra khi tạo câu hỏi')
       console.error(error)
     }
   }
@@ -115,7 +151,8 @@ export default function ModalCreateQuestion({ type, open, setOpen }: ModalCreate
   return (
     <Dialog
       open={open}
-      maxWidth='sm'
+      maxWidth='md'
+      fullWidth
       sx={{
         '& .MuiDialog-paper': {
           overflow: 'visible'
@@ -133,144 +170,153 @@ export default function ModalCreateQuestion({ type, open, setOpen }: ModalCreate
           sx={{
             overflowY: 'auto',
             overflowX: 'visible',
-            maxHeight: '60vh'
+            maxHeight: '80vh',
+            padding: '24px'
           }}
         >
-          <Grid container spacing={6}>
-            <Grid size={{ xs: 12 }} className='flex flex-col'>
-              <CustomInputLabel required>Nội dung câu hỏi</CustomInputLabel>
-              <Controller
-                name='content'
-                control={control}
-                rules={{ required: 'Nội dung là bắt buộc' }}
-                render={({ field }) => (
-                  <CustomTextField
-                    {...field}
-                    placeholder='Nhập nội dung câu hỏi'
-                    error={!!errors.content}
-                    helperText={errors.content?.message}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }} className='flex flex-col'>
-              <CustomInputLabel required>Mức độ</CustomInputLabel>
-              <Controller
-                name='level'
-                control={control}
-                rules={{ required: 'Mức độ là bắt buộc', min: { value: 1, message: 'Tối thiểu là 1' } }}
-                render={({ field }) => (
-                  <CustomTextField
-                    {...field}
-                    type='number'
-                    placeholder='Nhập mức độ'
-                    error={!!errors.level}
-                    helperText={errors.level?.message}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }} className='flex flex-col'>
-              <CustomInputLabel required>Loại câu hỏi</CustomInputLabel>
-              <Controller
-                name='type'
-                control={control}
-                rules={{ required: 'Loại là bắt buộc' }}
-                render={({ field }) => (
-                  <CustomTextField
-                    {...field}
-                    type='number'
-                    placeholder='Nhập loại câu hỏi'
-                    error={!!errors.type}
-                    helperText={errors.type?.message}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }} className='flex flex-col'>
-              <CustomInputLabel required>Môn học liên quan</CustomInputLabel>
-              <Controller
-                name='subject_ids'
-                control={control}
-                rules={{
-                  validate: v => (v && v.length > 0) || 'Chọn ít nhất một môn học'
-                }}
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    multiple
-                    value={field.value}
-                    onChange={e => field.onChange(e.target.value)}
-                    renderValue={selected =>
-                      subjects
-                        .filter(sub => selected.includes(sub.id))
-                        .map(sub => sub.name)
-                        .join(', ')
-                    }
-                    error={!!errors.subject_ids}
-                  >
-                    {subjects.map(sub => (
-                      <MenuItem key={sub.id} value={sub.id}>
-                        <Checkbox checked={field.value.includes(sub.id)} />
-                        <ListItemText primary={sub.name} />
-                      </MenuItem>
-                    ))}
-                  </Select>
-                )}
-              />
-              {loadingSubjects && <span>Đang tải danh sách môn học...</span>}
-              {errorSubjects && <span style={{ color: 'red' }}>{errorSubjects}</span>}
-              {errors.subject_ids && <span style={{ color: 'red' }}>{errors.subject_ids.message}</span>}
-            </Grid>
-            <Grid size={{ xs: 12 }} className='flex flex-col gap-2'>
-              <CustomInputLabel required>Đáp án</CustomInputLabel>
-              {fields.map((item, idx) => (
-                <Grid key={item.id} className='flex items-center gap-2'>
-                  <Controller
-                    name={`answers.${idx}.content` as const}
-                    control={control}
-                    rules={{ required: 'Nội dung đáp án là bắt buộc' }}
-                    render={({ field }) => (
-                      <CustomTextField
-                        {...field}
-                        placeholder={`Đáp án ${idx + 1}`}
-                        error={!!errors.answers?.[idx]?.content}
-                        helperText={errors.answers?.[idx]?.content?.message}
-                      />
-                    )}
-                  />
-                  <Controller
-                    name={`answers.${idx}.is_true` as const}
-                    control={control}
-                    render={({ field }) => (
-                      <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <input
-                          type='checkbox'
-                          name={field.name}
-                          ref={field.ref}
-                          checked={field.value}
-                          onChange={e => field.onChange(e.target.checked)}
-                          onBlur={field.onBlur}
-                          disabled={field.disabled}
-                        />
-                        Đúng
-                      </label>
-                    )}
-                  />
-                  {fields.length > 2 && (
-                    <Button size='small' color='error' onClick={() => remove(idx)}>
-                      Xóa
-                    </Button>
+          {loadingQuestion ? (
+            <div className='flex justify-center items-center py-8'>
+              <Typography>Đang tải thông tin câu hỏi...</Typography>
+            </div>
+          ) : (
+            <Grid container spacing={6}>
+              <Grid size={{ xs: 12 }} className='flex flex-col'>
+                <CustomInputLabel required>Nội dung câu hỏi</CustomInputLabel>
+                <Controller
+                  name='content'
+                  control={control}
+                  rules={{ required: 'Nội dung là bắt buộc' }}
+                  render={({ field }) => (
+                    <CustomTextField
+                      {...field}
+                      placeholder='Nhập nội dung câu hỏi'
+                      error={!!errors.content}
+                      helperText={errors.content?.message}
+                    />
                   )}
-                </Grid>
-              ))}
-              <Button size='small' onClick={() => append({ content: '', is_true: false })}>
-                Thêm đáp án
-              </Button>
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }} className='flex flex-col'>
+                <CustomInputLabel required>Mức độ</CustomInputLabel>
+                <Controller
+                  name='level'
+                  control={control}
+                  rules={{ required: 'Mức độ là bắt buộc' }}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      value={field.value}
+                      onChange={e => field.onChange(e.target.value)}
+                      error={!!errors.level}
+                      displayEmpty
+                    >
+                      <MenuItem value={1}>Mức 1 - Dễ</MenuItem>
+                      <MenuItem value={2}>Mức 2 - Trung bình</MenuItem>
+                      <MenuItem value={3}>Mức 3 - Khó</MenuItem>
+                      <MenuItem value={4}>Mức 4 - Rất khó</MenuItem>
+                    </Select>
+                  )}
+                />
+                {errors.level && (
+                  <span style={{ color: 'red', fontSize: '0.75rem', marginTop: '4px' }}>{errors.level.message}</span>
+                )}
+              </Grid>
+              <Grid size={{ xs: 12 }} className='flex flex-col'>
+                <CustomInputLabel required>Loại câu hỏi</CustomInputLabel>
+                <Controller
+                  name='type'
+                  control={control}
+                  rules={{ required: 'Loại là bắt buộc' }}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      value={field.value}
+                      onChange={e => field.onChange(e.target.value)}
+                      error={!!errors.type}
+                      displayEmpty
+                    >
+                      <MenuItem value={1}>1 đáp án</MenuItem>
+                      <MenuItem value={2}>Nhiều đáp án</MenuItem>
+                    </Select>
+                  )}
+                />
+                {errors.type && (
+                  <span style={{ color: 'red', fontSize: '0.75rem', marginTop: '4px' }}>{errors.type.message}</span>
+                )}
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <SubjectAutocomplete
+                  control={control}
+                  name='subject_ids'
+                  errors={errors}
+                  required
+                  label='Môn học liên quan'
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }} className='flex flex-col gap-2'>
+                <CustomInputLabel required>Đáp án</CustomInputLabel>
+                {fields.map((item, idx) => (
+                  <Grid key={item.id} className='flex items-center gap-2'>
+                    <Controller
+                      name={`answers.${idx}.content` as const}
+                      control={control}
+                      rules={{ required: 'Nội dung đáp án là bắt buộc' }}
+                      render={({ field }) => (
+                        <CustomTextField
+                          {...field}
+                          placeholder={`Đáp án ${idx + 1}`}
+                          error={!!errors.answers?.[idx]?.content}
+                          helperText={errors.answers?.[idx]?.content?.message}
+                        />
+                      )}
+                    />
+                    <Controller
+                      name={`answers.${idx}.is_true` as const}
+                      control={control}
+                      render={({ field }) => (
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: '80px' }}>
+                          {questionType === 1 ? (
+                            <input
+                              type='radio'
+                              name='correct_answer'
+                              checked={field.value}
+                              onChange={() => {
+                                // Uncheck all other answers
+                                fields.forEach((_, i) => {
+                                  setValue(`answers.${i}.is_true`, i === idx)
+                                })
+                              }}
+                            />
+                          ) : (
+                            <input
+                              type='checkbox'
+                              name={field.name}
+                              ref={field.ref}
+                              checked={field.value}
+                              onChange={e => field.onChange(e.target.checked)}
+                              onBlur={field.onBlur}
+                              disabled={field.disabled}
+                            />
+                          )}
+                          Đúng
+                        </label>
+                      )}
+                    />
+                    {fields.length > 2 && (
+                      <Button size='small' color='error' onClick={() => remove(idx)}>
+                        Xóa
+                      </Button>
+                    )}
+                  </Grid>
+                ))}
+                <Button size='small' onClick={() => append({ content: '', is_true: false })}>
+                  Thêm đáp án
+                </Button>
+              </Grid>
             </Grid>
-          </Grid>
+          )}
           <DialogActions className='justify-center'>
-            <Button variant='contained' type='submit'>
+            <Button variant='contained' type='submit' disabled={loadingQuestion}>
               {type === 'create' ? 'Tạo' : 'Lưu'}
             </Button>
             <Button
@@ -281,6 +327,7 @@ export default function ModalCreateQuestion({ type, open, setOpen }: ModalCreate
                 reset()
                 setOpen(false)
               }}
+              disabled={loadingQuestion}
             >
               Huỷ
             </Button>

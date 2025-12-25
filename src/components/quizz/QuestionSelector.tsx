@@ -1,14 +1,18 @@
 'use client'
 
 import type { ChangeEvent } from 'react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import Card from '@mui/material/Card'
 import MenuItem from '@mui/material/MenuItem'
 import Checkbox from '@mui/material/Checkbox'
 import FormControlLabel from '@mui/material/FormControlLabel'
+import Autocomplete from '@mui/material/Autocomplete'
+import Chip from '@mui/material/Chip'
+import ListItemText from '@mui/material/ListItemText'
+import Button from '@mui/material/Button'
 
-import { fetchApi } from '@/libs/fetchApi'
+import { apiClient } from '@/libs/axios-client'
 import CustomTextField from '@/@core/components/mui/TextField'
 import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
 import PageLoading from '@/theme/PageLoading'
@@ -26,6 +30,7 @@ type Question = {
   created_at: string
   updated_at: string
   subject_id?: string
+  subject_ids?: string[]
 }
 
 interface QuestionSelectorProps {
@@ -40,64 +45,112 @@ export default function QuestionSelector({ selectedQuestions, onSelectionChange 
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([])
   const [loadingSubjects, setLoadingSubjects] = useState(false)
 
-  // Filter states
-  const [searchTerm, setSearchTerm] = useState<string>('')
-  const [subjectId, setSubjectId] = useState<string>('')
-  const [level, setLevel] = useState<string>('')
+  // Cached questions and pagination returned by server
+  const [allQuestions, setAllQuestions] = useState<Question[]>([])
+  const serverTotalItemsRef = useRef<number | null>(null)
+  const selectedSubjectIdsRef = useRef<string[]>([])
+
+  // Filter states - actual values used for API calls
+  const [appliedSearchTerm, setAppliedSearchTerm] = useState<string>('')
+  const [appliedLevel, setAppliedLevel] = useState<string>('')
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([])
   const [page, setPage] = useState<number>(1)
   const [limit, setLimit] = useState<number>(10)
 
+  // Local states for input fields (not applied until search button is clicked)
+  const [searchTerm, setSearchTerm] = useState<string>('')
+  const [level, setLevel] = useState<string>('')
+
+  const skipNextFetchRef = useRef(false)
+
+  const filterQuestionsBySubjects = useCallback((questions: Question[], subjectIds: string[]) => {
+    if (!subjectIds || subjectIds.length === 0) {
+      return questions
+    }
+
+    const subjectSet = new Set(subjectIds)
+
+    return questions.filter((question: Question) => {
+      const questionSubjects: string[] = Array.isArray(question.subject_ids)
+        ? question.subject_ids
+        : question.subject_id
+          ? [question.subject_id]
+          : []
+
+      return questionSubjects.some(subjectId => subjectSet.has(subjectId))
+    })
+  }, [])
+
+  const applyQuestionFilters = useCallback(
+    (questions: Question[], subjectIds: string[]) => {
+      const filteredQuestions = filterQuestionsBySubjects(questions, subjectIds)
+
+      const baseTotal = serverTotalItemsRef.current ?? filteredQuestions.length
+      const totalItems = subjectIds.length > 0 ? filteredQuestions.length : baseTotal
+
+      setQuestionData(filteredQuestions)
+      setPaginationData({
+        page,
+        limit,
+        totalItems
+      })
+    },
+    [filterQuestionsBySubjects, limit, page]
+  )
+
   const fetchQuestions = useCallback(async () => {
     try {
+      if (skipNextFetchRef.current) {
+        skipNextFetchRef.current = false
+
+        return
+      }
+
       setLoading(true)
 
       const queryString = new URLSearchParams()
 
-      if (searchTerm) queryString.append('search', searchTerm)
-      if (subjectId) queryString.append('subject_id', subjectId)
-      if (level) queryString.append('level', level)
+      if (appliedSearchTerm) queryString.append('search', appliedSearchTerm)
+      if (appliedLevel) queryString.append('level', appliedLevel)
       queryString.append('page', page.toString())
       queryString.append('limit', limit.toString())
 
-      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/questions${queryString.toString() ? `?${queryString.toString()}` : ''}`
+      const apiUrl = `/api/v1/questions${queryString.toString() ? `?${queryString.toString()}` : ''}`
 
-      const questionsRes = await fetchApi(apiUrl, { method: 'GET' })
+      const questionsRes = await apiClient.get(apiUrl)
 
-      if (!questionsRes.ok) {
-        setPaginationData(null)
-        throw new Error('Không lấy được danh sách câu hỏi')
-      }
+      const questionsData = questionsRes.data
+      const rawQuestions: Question[] = questionsData?.data || []
 
-      const questionsData = await questionsRes.json()
-
-      setQuestionData(questionsData?.data || [])
-      setPaginationData({
-        ...questionsData?.pagination,
-        page: page,
-        limit: limit
-      })
+      serverTotalItemsRef.current = questionsData?.pagination?.totalItems ?? rawQuestions.length
+      setAllQuestions(rawQuestions)
+      applyQuestionFilters(rawQuestions, selectedSubjectIdsRef.current)
     } catch (error) {
       console.error(error)
     } finally {
       setLoading(false)
     }
-  }, [searchTerm, subjectId, level, page, limit])
+  }, [applyQuestionFilters, limit, appliedLevel, page, appliedSearchTerm])
 
   useEffect(() => {
     fetchQuestions()
   }, [fetchQuestions])
 
+  // Re-apply subject filters without triggering a refetch
+  useEffect(() => {
+    applyQuestionFilters(allQuestions, selectedSubjectIds)
+  }, [allQuestions, selectedSubjectIds, applyQuestionFilters])
+
+  useEffect(() => {
+    selectedSubjectIdsRef.current = selectedSubjectIds
+  }, [selectedSubjectIds])
+
   // Fetch subjects
   useEffect(() => {
     setLoadingSubjects(true)
-    fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/subjects?page=1&limit=100`, { method: 'GET' })
+    apiClient.get('/api/v1/subjects?page=1&limit=100')
       .then(res => {
-        if (!res.ok) throw new Error('Không lấy được danh sách môn học')
-
-        return res.json()
-      })
-      .then(json => {
-        setSubjects(json?.data || [])
+        setSubjects(res.data?.data || [])
       })
       .catch(err => {
         console.error(err)
@@ -112,19 +165,19 @@ export default function QuestionSelector({ selectedQuestions, onSelectionChange 
     setPage(1)
   }
 
-  const handleSubjectChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setSubjectId(e.target.value)
-    setPage(1)
-  }
-
   const handleLevelChange = (e: ChangeEvent<HTMLInputElement>) => {
     setLevel(e.target.value)
+  }
+
+  const handleApplySearch = () => {
+    setAppliedSearchTerm(searchTerm)
+    setAppliedLevel(level)
     setPage(1)
   }
 
-  const handleSearchChange = (event: React.KeyboardEvent<HTMLDivElement>) => {
+  const handleChangeSearch = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter') {
-      setPage(1)
+      handleApplySearch()
     }
   }
 
@@ -163,39 +216,54 @@ export default function QuestionSelector({ selectedQuestions, onSelectionChange 
       <div className='flex flex-col lg:flex-row flex-wrap justify-between gap-3 p-6'>
         <div className='flex flex-wrap items-center max-sm:flex-col gap-3 max-sm:is-full is-auto'>
           <CustomTextField
-            value={searchTerm}
+            value={searchTerm || ''}
             type='search'
             onChange={e => setSearchTerm(e.target.value)}
-            onKeyUp={handleSearchChange}
+            onKeyUp={handleChangeSearch}
             placeholder='Tìm kiếm câu hỏi'
             className='max-sm:is-full is-[260px] !bg-white'
           />
-          <CustomTextField
-            select
-            value={subjectId}
-            onChange={handleSubjectChange}
-            className='max-sm:is-full is-[200px] !bg-white'
-            disabled={loadingSubjects}
-            SelectProps={{
-              displayEmpty: true,
-              renderValue: (selected: unknown) => {
-                if (!selected || selected === '') {
-                  return 'Tất cả môn học'
-                }
+          <Autocomplete
+            multiple
+            disableCloseOnSelect
+            options={subjects}
+            loading={loadingSubjects}
+            getOptionLabel={option => option.name}
+            value={subjects.filter(subject => selectedSubjectIds.includes(subject.id))}
+            onChange={(_, newValue) => {
+              const newIds = newValue.map(subject => subject.id)
 
-                const selectedSubject = subjects.find(subject => subject.id === String(selected))
-
-                return selectedSubject?.name || 'Tất cả môn học'
-              }
+              setSelectedSubjectIds(newIds)
+              selectedSubjectIdsRef.current = newIds
             }}
-          >
-            <MenuItem value=''>Tất cả môn học</MenuItem>
-            {subjects.map(subject => (
-              <MenuItem key={subject.id} value={subject.id}>
-                {subject.name}
-              </MenuItem>
-            ))}
-          </CustomTextField>
+            renderTags={(value, getTagProps) =>
+              value.map((option, index) => {
+                const { key, ...tagProps } = getTagProps({ index })
+
+                return <Chip key={key ?? option.id} label={option.name} {...tagProps} size='small' />
+              })
+            }
+            renderOption={(props, option, { selected }) => {
+              const { key, ...optionProps } = props
+
+              return (
+                <li key={key} {...optionProps}>
+                  <Checkbox checked={selected} />
+                  <ListItemText primary={option.name} />
+                </li>
+              )
+            }}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            renderInput={params => (
+              <CustomTextField
+                {...params}
+                placeholder='Môn học liên quan'
+                className='max-sm:is-full is-[260px] !bg-white'
+              />
+            )}
+            noOptionsText='Không tìm thấy môn học phù hợp'
+            loadingText='Đang tải danh sách môn học...'
+          />
           <CustomTextField
             select
             value={level}
@@ -218,6 +286,9 @@ export default function QuestionSelector({ selectedQuestions, onSelectionChange 
             <MenuItem value='3'>3</MenuItem>
             <MenuItem value='4'>4</MenuItem>
           </CustomTextField>
+          <Button variant='contained' color='primary' onClick={handleApplySearch} className='!max-sm:is-full'>
+            Tìm kiếm
+          </Button>
         </div>
         <div className='flex flex-wrap items-center max-sm:flex-col gap-3'>
           <CustomTextField

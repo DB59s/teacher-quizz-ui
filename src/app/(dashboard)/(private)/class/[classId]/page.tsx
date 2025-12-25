@@ -13,13 +13,14 @@ import Tab from '@mui/material/Tab'
 import TabContext from '@mui/lab/TabContext'
 import TabPanel from '@mui/lab/TabPanel'
 
-import { fetchApi } from '@/libs/fetchApi'
+import { apiClient } from '@/libs/axios-client'
 
 // Component Imports
 import CustomTabList from '@core/components/mui/TabList'
 import Newsfeed from '@views/class/Tab/Newsfeed'
 import Members from '@views/class/Tab/Members'
 import Exercises from '@views/class/Tab/Exercises'
+import ApprovalMember from '@views/class/Tab/ApprovalMember'
 import PageLoading from '@/theme/PageLoading'
 
 export default function ClassPage({ params }: { params: Promise<{ classId: string }> }) {
@@ -34,32 +35,24 @@ export default function ClassPage({ params }: { params: Promise<{ classId: strin
   const unwrappedParams = React.use(params)
   const classId = unwrappedParams.classId
 
-  useEffect(() => {
-    let isMounted = true
+  const fetchClassData = useCallback(async () => {
+    try {
+      setLoading(true)
 
-    setLoading(true)
-    fetchApi(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/classes/details/${classId}`, { method: 'GET' })
-      .then(res => {
-        if (!res.ok) throw new Error('Không lấy được thông tin lớp học')
+      const res = await apiClient.get(`/api/v1/classes/details/${classId}`)
 
-        return res.json()
-      })
-      .then(json => {
-        if (isMounted) setData(json?.data || null)
-      })
-      .catch(err => {
-        if (isMounted) setError(err.message || 'Lỗi không xác định')
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false)
-      })
-
-    return () => {
-      isMounted = false
+      setData(res.data?.data || null)
+      setError('')
+    } catch (err: any) {
+      setError(err.message || 'Lỗi không xác định')
+    } finally {
+      setLoading(false)
     }
   }, [classId])
 
-  console.log('Class data:', data)
+  useEffect(() => {
+    fetchClassData()
+  }, [fetchClassData])
 
   const handleChange = useCallback(
     (event: SyntheticEvent, value: string) => {
@@ -91,15 +84,19 @@ export default function ClassPage({ params }: { params: Promise<{ classId: strin
               <Tab label={<div className='flex items-center gap-1.5'>Bảng tin</div>} value='newsfeed' />
               <Tab label={<div className='flex items-center gap-1.5'>Bài tập trên lớp</div>} value='exercises' />
               <Tab label={<div className='flex items-center gap-1.5'>Mọi người</div>} value='members' />
+              <Tab label={<div className='flex items-center gap-1.5'>Phê duyệt</div>} value='approval' />
             </CustomTabList>
             <TabPanel value={'newsfeed'} className='p-0'>
-              <Newsfeed data={data} />
+              <Newsfeed data={data} onRefresh={fetchClassData} />
             </TabPanel>
             <TabPanel value={'exercises'} className='p-0'>
-              <Exercises data={data}/>
+              <Exercises data={data} />
             </TabPanel>
             <TabPanel value={'members'} className='p-0'>
               <Members data={data} />
+            </TabPanel>
+            <TabPanel value={'approval'} className='p-0'>
+              <ApprovalMember data={data} />
             </TabPanel>
           </TabContext>
         </Grid>

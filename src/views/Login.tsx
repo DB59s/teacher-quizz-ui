@@ -99,6 +99,10 @@ const Login = ({ mode }: { mode: SystemMode }) => {
   const hidden = useMediaQuery(theme.breakpoints.down('md'))
   const authBackground = useImageVariant(mode, lightImg, darkImg)
 
+  // NOTE: Session checking is handled by GuestOnlyRoute HOC on server-side
+  // No need to check on client-side to avoid conflicts with auth validation
+  // If user is authenticated, GuestOnlyRoute will redirect to dashboard before this component renders
+
   const {
     control,
     handleSubmit,
@@ -129,7 +133,8 @@ const Login = ({ mode }: { mode: SystemMode }) => {
     })
 
     if (res && res.ok && res.error === null) {
-      const redirectURL = searchParams.get('redirectTo') ?? '/'
+      // Redirect to teacher dashboard after successful login
+      const redirectURL = searchParams.get('redirectTo') ?? '/dashboards/teacher'
 
       router.replace(redirectURL)
     } else {

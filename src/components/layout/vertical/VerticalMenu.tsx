@@ -5,6 +5,7 @@ import { useTheme } from '@mui/material/styles'
 
 // Third-party Imports
 import PerfectScrollbar from 'react-perfect-scrollbar'
+import { LayoutDashboard } from 'lucide-react'
 
 // Type Imports
 import type { VerticalMenuContextProps } from '@menu/components/vertical-menu/Menu'
@@ -78,14 +79,17 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
         renderExpandedMenuItemIcon={{ icon: <i className='tabler-circle text-xs' /> }}
         menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
       >
+        <MenuItem
+          href='/dashboards/teacher'
+          activeUrl='/dashboards/teacher'
+          icon={<LayoutDashboard size={20} />}
+          exactMatch={false}
+        >
+          Tổng quan
+        </MenuItem>
         <SubMenu label='Danh sách lớp học' icon={<i className='tabler-smart-home' />}>
           {classes.map(item => (
-            <MenuItem
-              key={item._id}
-              href={`/class/${item._id}`}
-              activeUrl={`/class/${item._id}`}
-              exactMatch={false}
-            >
+            <MenuItem key={item._id} href={`/class/${item._id}`} activeUrl={`/class/${item._id}`} exactMatch={false}>
               {item.name}
             </MenuItem>
           ))}
@@ -98,17 +102,12 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
         >
           Ngân hàng câu hỏi
         </MenuItem>
-        <MenuItem
-          href='/quizz'
-          activeUrl='/quizz'
-          icon={<i className='tabler-puzzle' />}
-          exactMatch={false}
-        >
+        <MenuItem href='/quizz' activeUrl='/quizz' icon={<i className='tabler-puzzle' />} exactMatch={false}>
           Danh sách quizz
         </MenuItem>
-        <MenuItem href='/profile' activeUrl='/profile' icon={<i className='tabler-user-circle' />} exactMatch={false}>
+        {/* <MenuItem href='/profile' activeUrl='/profile' icon={<i className='tabler-user-circle' />} exactMatch={false}>
           Hồ sơ
-        </MenuItem>
+        </MenuItem> */}
         {/* <SubMenu label='frontPages' icon={<i className='tabler-files' />}>
           <MenuItem href='/front-pages/landing-page' target='_blank'>
             landing
