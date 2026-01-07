@@ -10,14 +10,11 @@ import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
-import MenuItem from '@mui/material/MenuItem'
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import TextField from '@mui/material/TextField'
-
-
 
 import clsx from 'clsx'
 import { Edit2, Eye, Trash } from 'iconsax-react'
@@ -141,9 +138,7 @@ export default function Exercises({ data }: any) {
       queryString.append('page', currentPage.toString())
       queryString.append('limit', itemsPerPage.toString())
 
-      const { data } = await apiClient.get(
-        `/api/v1/class-quizzes/class/${class_id}?${queryString.toString()}`
-      )
+      const { data } = await apiClient.get(`/api/v1/class-quizzes/class/${class_id}?${queryString.toString()}`)
 
       setClassQuizzes(data?.data || [])
       setPaginationData(data?.pagination || null)
@@ -405,22 +400,6 @@ export default function Exercises({ data }: any) {
       <Card>
         <PageLoading show={loadingClassQuizzes} />
 
-        <div className='flex flex-col lg:flex-row flex-wrap justify-between gap-3 p-6'>
-          <div className='flex flex-wrap items-center max-sm:flex-col gap-3 max-sm:is-full is-auto'>
-            <TextField
-              select
-              value={itemsPerPage.toString()}
-              onChange={handleLimitChange}
-              className='flex-auto is-[70px]'
-              size='small'
-            >
-              <MenuItem value='10'>10</MenuItem>
-              <MenuItem value='25'>25</MenuItem>
-              <MenuItem value='50'>50</MenuItem>
-            </TextField>
-          </div>
-        </div>
-
         <div className='overflow-x-auto w-full'>
           <table className='w-full min-w-max table-auto text-left text-sm border-spacing-0'>
             <thead>
@@ -510,16 +489,17 @@ export default function Exercises({ data }: any) {
           </table>
         </div>
 
-        {paginationData && (
-          <TableRCPaginationCustom
-            pagination={{
-              page: paginationData.currentPage,
-              limit: paginationData.itemsPerPage,
-              totalItems: paginationData.totalItems
-            }}
-            onChangePage={handlePageChange}
-          />
-        )}
+        {/* Always show pagination */}
+        <TableRCPaginationCustom
+          pagination={{
+            page: paginationData?.currentPage || currentPage,
+            limit: paginationData?.itemsPerPage || itemsPerPage,
+            totalItems: paginationData?.totalItems || 0
+          }}
+          onChangePage={handlePageChange}
+          onLimitChange={handleLimitChange}
+          showLimitSelector={true}
+        />
       </Card>
 
       {/* Quiz Selection Dialog */}

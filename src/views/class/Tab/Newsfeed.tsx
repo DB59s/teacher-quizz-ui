@@ -89,7 +89,80 @@ export default function Newsfeed({ data, onRefresh }: NewsfeedProps) {
             </Card>
           </Grid>
         </Grid>
-        <Grid container size={{ xs: 9 }} spacing={3}></Grid>
+        <Grid container size={{ xs: 9 }} spacing={3}>
+          <Grid size={{ xs: 12 }}>
+            <Card>
+              <CardContent>
+                <Typography variant='h5' className='font-semibold mb-4'>
+                  Hoạt động gần đây
+                </Typography>
+                <Stack spacing={2}>
+                  {/* Activity Timeline */}
+                  <Box className='flex gap-3'>
+                    <Box className='flex flex-col items-center'>
+                      <Box
+                        className='rounded-full flex items-center justify-center'
+                        sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}
+                      >
+                        <i className='tabler-school text-white' style={{ fontSize: '16px' }} />
+                      </Box>
+                      <Box sx={{ width: 2, height: '100%', bgcolor: 'divider', my: 1 }} />
+                    </Box>
+                    <Box className='flex-1'>
+                      <Typography variant='body1' className='font-medium'>
+                        Lớp học được tạo
+                      </Typography>
+                      <Typography variant='body2' color='text.secondary'>
+                        {new Date(data.created_at).toLocaleString('vi-VN')}
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  {data.updated_at !== data.created_at && (
+                    <Box className='flex gap-3'>
+                      <Box className='flex flex-col items-center'>
+                        <Box
+                          className='rounded-full flex items-center justify-center'
+                          sx={{ width: 32, height: 32, bgcolor: 'success.main' }}
+                        >
+                          <i className='tabler-edit text-white' style={{ fontSize: '16px' }} />
+                        </Box>
+                        <Box sx={{ width: 2, height: '100%', bgcolor: 'divider', my: 1 }} />
+                      </Box>
+                      <Box className='flex-1'>
+                        <Typography variant='body1' className='font-medium'>
+                          Cập nhật thông tin lớp
+                        </Typography>
+                        <Typography variant='body2' color='text.secondary'>
+                          {new Date(data.updated_at).toLocaleString('vi-VN')}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  )}
+
+                  <Box className='flex gap-3'>
+                    <Box className='flex flex-col items-center'>
+                      <Box
+                        className='rounded-full flex items-center justify-center'
+                        sx={{ width: 32, height: 32, bgcolor: 'info.main' }}
+                      >
+                        <i className='tabler-users text-white' style={{ fontSize: '16px' }} />
+                      </Box>
+                    </Box>
+                    <Box className='flex-1'>
+                      <Typography variant='body1' className='font-medium'>
+                        Trạng thái: {status === 'active' ? 'Đang hoạt động' : 'Không hoạt động'}
+                      </Typography>
+                      <Typography variant='body2' color='text.secondary'>
+                        Mã lớp: {class_code}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Stack>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
       </Grid>
 
       <UpdateClassModal
