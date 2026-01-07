@@ -17,7 +17,6 @@ import { Inbox } from 'lucide-react'
 import { useQueryParams } from '@/hooks/useQueryParams'
 import useTableHead from '@/hooks/useTableHead'
 import { useQuizzes } from '@/hooks/queries/useQuizzes'
-import { useDeleteQuiz } from '@/hooks/mutations/useQuizMutations'
 import PageLoading from '@/theme/PageLoading'
 import CustomIconButton from '@/@core/components/mui/IconButton'
 import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
@@ -66,9 +65,6 @@ export default function QuizzTable() {
 
   const quizzes = data?.quizzes || []
   const paginationData: PaginationData = data?.pagination || null
-
-  // Use delete mutation
-  const deleteQuizMutation = useDeleteQuiz()
 
   const handleLimitChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newLimit = e.target.value

@@ -6,13 +6,16 @@ import type { ReactElement } from 'react'
 // Next Imports
 import dynamic from 'next/dynamic'
 
+import Typography from '@mui/material/Typography'
+
 // Type Imports
 import type { Data, ProfileHeaderType, ProfileTabType } from '@/types/pages/profileTypes'
 
 // Component Imports
 import UserProfile from '@views/pages/user-profile'
 import PageLoading from '@/theme/PageLoading'
-import Typography from '@mui/material/Typography'
+
+
 
 // Hooks
 import { useUserProfile } from '@/hooks/queries/useUser'

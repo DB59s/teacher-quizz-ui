@@ -19,7 +19,7 @@ export function useApproveStudent() {
 
   return useMutation({
     mutationFn: approveStudent,
-    onSuccess: (_, registrationId) => {
+    onSuccess: () => {
       toast.success('Phê duyệt học sinh thành công!', {
         position: 'bottom-right',
         autoClose: 3000

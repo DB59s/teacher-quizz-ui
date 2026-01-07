@@ -26,7 +26,6 @@ import { useQueryParams } from '@/hooks/useQueryParams'
 import useTableHead from '@/hooks/useTableHead'
 import { useQuestions } from '@/hooks/queries/useQuestions'
 import { useSubjects } from '@/hooks/queries/useSubjects'
-import { useDeleteQuestion } from '@/hooks/mutations/useQuestionMutations'
 
 import CustomIconButton from '@/@core/components/mui/IconButton'
 import PageLoading from '@/theme/PageLoading'
@@ -96,9 +95,6 @@ export default function QuestionView() {
   const questionData = questionsData?.questions || []
   const paginationData: PaginationData = questionsData?.pagination || null
   const subjects = subjectsData?.subjects || []
-
-  // Use delete mutation
-  const deleteQuestionMutation = useDeleteQuestion()
 
   // Sync local state with URL params
   useEffect(() => {

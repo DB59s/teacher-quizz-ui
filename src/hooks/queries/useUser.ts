@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'react-toastify'
 
 import { getUserProfile, updateUserProfile, type UpdateUserProfileData } from '@/services/user.service'
-import { toast } from 'react-toastify'
 
 /**
  * Query key for user profile
