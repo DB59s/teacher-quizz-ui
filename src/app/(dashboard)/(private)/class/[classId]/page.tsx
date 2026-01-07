@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import React, { useCallback, useState, useEffect } from 'react'
+import React, { useCallback, useState } from 'react'
 import type { SyntheticEvent } from 'react'
 
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -13,7 +13,7 @@ import Tab from '@mui/material/Tab'
 import TabContext from '@mui/lab/TabContext'
 import TabPanel from '@mui/lab/TabPanel'
 
-import { apiClient } from '@/libs/axios-client'
+import { useClassDetail } from '@/hooks/queries/useClasses'
 
 // Component Imports
 import CustomTabList from '@core/components/mui/TabList'
@@ -25,9 +25,6 @@ import PageLoading from '@/theme/PageLoading'
 
 export default function ClassPage({ params }: { params: Promise<{ classId: string }> }) {
   const [activeTab, setActiveTab] = useState('newsfeed')
-  const [data, setData] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string>('')
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -35,24 +32,8 @@ export default function ClassPage({ params }: { params: Promise<{ classId: strin
   const unwrappedParams = React.use(params)
   const classId = unwrappedParams.classId
 
-  const fetchClassData = useCallback(async () => {
-    try {
-      setLoading(true)
-
-      const res = await apiClient.get(`/api/v1/classes/details/${classId}`)
-
-      setData(res.data?.data || null)
-      setError('')
-    } catch (err: any) {
-      setError(err.message || 'Lỗi không xác định')
-    } finally {
-      setLoading(false)
-    }
-  }, [classId])
-
-  useEffect(() => {
-    fetchClassData()
-  }, [fetchClassData])
+  // Use TanStack Query hook to fetch class data
+  const { data, isLoading, error, refetch } = useClassDetail(classId)
 
   const handleChange = useCallback(
     (event: SyntheticEvent, value: string) => {
@@ -65,13 +46,13 @@ export default function ClassPage({ params }: { params: Promise<{ classId: strin
     [router, searchParams]
   )
 
-  if (loading) return <PageLoading show={loading} />
-  if (error) return <Typography color='error'>{error}</Typography>
+  if (isLoading) return <PageLoading show={isLoading} />
+  if (error) return <Typography color='error'>{(error as any)?.message || 'Lỗi không xác định'}</Typography>
   if (!data) return <Typography color='error'>Không có dữ liệu lớp học</Typography>
 
   return (
     <>
-      <PageLoading show={loading} />
+      <PageLoading show={isLoading} />
       <Grid container spacing={6}>
         <Grid size={{ xs: 12 }}>
           <Typography variant='h4' className='font-semibold'>
@@ -87,7 +68,7 @@ export default function ClassPage({ params }: { params: Promise<{ classId: strin
               <Tab label={<div className='flex items-center gap-1.5'>Phê duyệt</div>} value='approval' />
             </CustomTabList>
             <TabPanel value={'newsfeed'} className='p-0'>
-              <Newsfeed data={data} onRefresh={fetchClassData} />
+              <Newsfeed data={data} onRefresh={() => refetch()} />
             </TabPanel>
             <TabPanel value={'exercises'} className='p-0'>
               <Exercises data={data} />

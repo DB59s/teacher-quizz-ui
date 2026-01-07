@@ -1,7 +1,7 @@
 'use client'
 
 import type { ChangeEvent } from 'react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { useSearchParams } from 'next/navigation'
 
@@ -13,11 +13,11 @@ import clsx from 'clsx'
 
 import { Edit2, Eye, Trash } from 'iconsax-react'
 import { Inbox } from 'lucide-react'
-import { toast } from 'react-toastify'
 
 import { useQueryParams } from '@/hooks/useQueryParams'
 import useTableHead from '@/hooks/useTableHead'
-import { apiClient } from '@/libs/axios-client'
+import { useQuizzes } from '@/hooks/queries/useQuizzes'
+import { useDeleteQuiz } from '@/hooks/mutations/useQuizMutations'
 import PageLoading from '@/theme/PageLoading'
 import CustomIconButton from '@/@core/components/mui/IconButton'
 import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
@@ -34,10 +34,7 @@ type PaginationData = {
 
 export default function QuizzTable() {
   const TABLE_HEAD = useTableHead()
-  const [quizzes, setQuizzes] = useState([])
-  const [loading, setLoading] = useState(false)
   const { updateQueryParams } = useQueryParams()
-  const [paginationData, setPaginationData] = useState<PaginationData>(null)
   const searchParams = useSearchParams()
 
   // States for delete confirmation modal
@@ -61,41 +58,17 @@ export default function QuizzTable() {
     [searchParams]
   )
 
-  const fetchQuizzes = useCallback(async () => {
-    setLoading(true)
+  // Use TanStack Query hook to fetch quizzes
+  const { data, isLoading } = useQuizzes({
+    page: parseInt(currentSearchParams.page),
+    limit: parseInt(currentSearchParams.limit)
+  })
 
-    try {
-      const queryString = new URLSearchParams()
+  const quizzes = data?.quizzes || []
+  const paginationData: PaginationData = data?.pagination || null
 
-      if (currentSearchParams.page) queryString.append('page', currentSearchParams.page)
-      if (currentSearchParams.limit) queryString.append('limit', currentSearchParams.limit)
-
-      const apiUrl = `/api/v1/quizzes${queryString.toString() ? `?${queryString.toString()}` : ''}`
-
-      const response = await apiClient.get(apiUrl)
-
-      const json = response.data
-
-      setQuizzes(json?.data || [])
-
-      // Set pagination data
-      const paginationWithCorrectPage = {
-        ...json?.pagination,
-        page: parseInt(currentSearchParams.page || '1'),
-        limit: parseInt(currentSearchParams.limit || '10')
-      }
-
-      setPaginationData(paginationWithCorrectPage || null)
-    } catch (error) {
-      console.error(error)
-    } finally {
-      setLoading(false)
-    }
-  }, [currentSearchParams.page, currentSearchParams.limit])
-
-  useEffect(() => {
-    fetchQuizzes()
-  }, [fetchQuizzes])
+  // Use delete mutation
+  const deleteQuizMutation = useDeleteQuiz()
 
   const handleLimitChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newLimit = e.target.value
@@ -120,22 +93,16 @@ export default function QuizzTable() {
   }
 
   const handleDeleteSuccess = () => {
-    toast.success('Xóa quiz thành công!', {
-      position: 'bottom-right',
-      autoClose: 3000
-    })
-
     // Reset states
     setQuizToDelete(null)
     setShowDeleteDialog(false)
 
-    // Refresh quizzes list
-    fetchQuizzes()
+    // No need to manually refetch - cache invalidation handles it
   }
 
   return (
     <Card>
-      <PageLoading show={loading} />
+      <PageLoading show={isLoading} />
       <div className='overflow-x-auto w-full'>
         <table className='w-full min-w-max table-auto text-left text-sm border-spacing-0'>
           <thead>
@@ -254,7 +221,7 @@ export default function QuizzTable() {
         }}
         quizId={selectedEditQuizId}
         onUpdateSuccess={() => {
-          fetchQuizzes()
+          // No need to manually refetch - mutation cache invalidation handles it
         }}
       />
     </Card>

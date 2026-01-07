@@ -1,7 +1,7 @@
 'use client'
 
 import type { ChangeEvent } from 'react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 
 import { useSearchParams } from 'next/navigation'
 
@@ -24,9 +24,11 @@ import { Button } from '@mui/material'
 import { useQueryParams } from '@/hooks/useQueryParams'
 
 import useTableHead from '@/hooks/useTableHead'
+import { useQuestions } from '@/hooks/queries/useQuestions'
+import { useSubjects } from '@/hooks/queries/useSubjects'
+import { useDeleteQuestion } from '@/hooks/mutations/useQuestionMutations'
 
 import CustomIconButton from '@/@core/components/mui/IconButton'
-import { apiClient } from '@/libs/axios-client'
 import PageLoading from '@/theme/PageLoading'
 import CustomTextField from '@/@core/components/mui/TextField'
 import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
@@ -42,10 +44,7 @@ type PaginationData = {
 
 export default function QuestionView() {
   const TABLE_HEAD = useTableHead()
-  const [loading, setLoading] = useState(false)
-  const [questionData, setQuestionData] = useState<any[]>([])
   const { updateQueryParams } = useQueryParams()
-  const [paginationData, setPaginationData] = useState<PaginationData>(null)
   const searchParams = useSearchParams()
 
   // States for delete confirmation modal
@@ -75,9 +74,6 @@ export default function QuestionView() {
     [searchParams]
   )
 
-  const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([])
-  const [loadingSubjects, setLoadingSubjects] = useState(false)
-
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>(() =>
     currentSearchParams.subject_id ? currentSearchParams.subject_id.split(',').filter(Boolean) : []
   )
@@ -86,68 +82,45 @@ export default function QuestionView() {
 
   const [searchTerm, setSearchTerm] = useState<string>(currentSearchParams.search || '')
 
-  const fetchQuestions = useCallback(async () => {
-    try {
-      setLoading(true)
+  // Use TanStack Query hooks
+  const { data: questionsData, isLoading: loadingQuestions } = useQuestions({
+    page: parseInt(currentSearchParams.page),
+    limit: parseInt(currentSearchParams.limit),
+    search: currentSearchParams.search,
+    level: currentSearchParams.level,
+    subject_id: currentSearchParams.subject_id
+  })
 
-      const queryString = new URLSearchParams()
+  const { data: subjectsData, isLoading: loadingSubjects } = useSubjects()
 
-      if (currentSearchParams.search) queryString.append('search', currentSearchParams.search)
-      if (currentSearchParams.status) queryString.append('status', currentSearchParams.status)
-      if (currentSearchParams.page) queryString.append('page', currentSearchParams.page)
-      if (currentSearchParams.limit) queryString.append('limit', currentSearchParams.limit)
-      if (currentSearchParams.inStock) queryString.append('inStock', currentSearchParams.inStock)
-      if (currentSearchParams.subject_id) queryString.append('subject_id', currentSearchParams.subject_id)
-      if (currentSearchParams.level) queryString.append('level', currentSearchParams.level)
+  const questionData = questionsData?.questions || []
+  const paginationData: PaginationData = questionsData?.pagination || null
+  const subjects = subjectsData?.subjects || []
 
-      // Tạo URL với query parameters
-      const apiUrl = `/api/v1/questions${queryString.toString() ? `?${queryString.toString()}` : ''}`
+  // Use delete mutation
+  const deleteQuestionMutation = useDeleteQuestion()
 
-      const questionsRes = await apiClient.get(apiUrl)
+  // Sync local state with URL params
+  useEffect(() => {
+    const subjectParam = currentSearchParams.subject_id
+    const nextSelected = subjectParam ? subjectParam.split(',').filter(Boolean) : []
 
-      const questionsData = questionsRes.data
-
-      setQuestionData(questionsData?.data || [])
-
-      // Đảm bảo pagination data có page từ searchParams
-      const paginationWithCorrectPage = {
-        ...questionsData?.pagination,
-        page: parseInt(currentSearchParams.page || '1'),
-        limit: parseInt(currentSearchParams.limit || '10')
+    setSelectedSubjectIds(prev => {
+      if (prev.length === nextSelected.length && prev.every((id, index) => id === nextSelected[index])) {
+        return prev
       }
 
-      setPaginationData(paginationWithCorrectPage || null)
-    } catch (error) {
-      console.error(error)
-    } finally {
-      setLoading(false)
-    }
-  }, [
-    currentSearchParams.search,
-    currentSearchParams.status,
-    currentSearchParams.page,
-    currentSearchParams.limit,
-    currentSearchParams.inStock,
-    currentSearchParams.subject_id,
-    currentSearchParams.level
-  ])
+      return nextSelected
+    })
+  }, [currentSearchParams.subject_id])
 
   useEffect(() => {
-    fetchQuestions()
-  }, [fetchQuestions])
+    setSelectedLevel(currentSearchParams.level || '')
+  }, [currentSearchParams.level])
 
-  // Lắng nghe custom event để refresh khi tạo câu hỏi thành công
   useEffect(() => {
-    const handleRefreshQuestions = () => {
-      fetchQuestions()
-    }
-
-    window.addEventListener('refreshQuestions', handleRefreshQuestions)
-
-    return () => {
-      window.removeEventListener('refreshQuestions', handleRefreshQuestions)
-    }
-  }, [fetchQuestions])
+    setSearchTerm(currentSearchParams.search || '')
+  }, [currentSearchParams.search])
 
   const handleDeleteQuestion = (id: string, content: string) => () => {
     setQuestionToDelete({ id, content })
@@ -159,8 +132,7 @@ export default function QuestionView() {
     setQuestionToDelete(null)
     setShowDeleteDialog(false)
 
-    // Refresh questions list
-    fetchQuestions()
+    // No need to manually refetch - cache invalidation handles it
   }
 
   const handleLimitChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -195,20 +167,6 @@ export default function QuestionView() {
   }
 
   useEffect(() => {
-    setLoadingSubjects(true)
-    apiClient.get('/api/v1/subjects?page=1&limit=100')
-      .then(res => {
-        setSubjects(res.data?.data || [])
-      })
-      .catch(err => {
-        console.error(err)
-      })
-      .finally(() => {
-        setLoadingSubjects(false)
-      })
-  }, [])
-
-  useEffect(() => {
     const subjectParam = currentSearchParams.subject_id
     const nextSelected = subjectParam ? subjectParam.split(',').filter(Boolean) : []
 
@@ -237,7 +195,7 @@ export default function QuestionView() {
 
   return (
     <Grid container spacing={6}>
-      <PageLoading show={loading} />
+      <PageLoading show={loadingQuestions} />
       <Grid size={{ xs: 12 }}>
         <div className='flex justify-between'>
           <Typography variant='h4' className='font-semibold'>
@@ -276,9 +234,8 @@ export default function QuestionView() {
                 renderTags={(value, getTagProps) =>
                   value.map((option, index) => {
                     const { key, ...tagProps } = getTagProps({ index })
-                    
+
                     return <Chip key={key} label={option.name} {...tagProps} size='small' />
-                    
                   })
                 }
                 renderOption={(props, option, { selected }) => {

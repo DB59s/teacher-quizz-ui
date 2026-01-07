@@ -1,3 +1,5 @@
+'use client'
+
 // React Imports
 import type { ReactElement } from 'react'
 
@@ -9,9 +11,11 @@ import type { Data, ProfileHeaderType, ProfileTabType } from '@/types/pages/prof
 
 // Component Imports
 import UserProfile from '@views/pages/user-profile'
+import PageLoading from '@/theme/PageLoading'
+import Typography from '@mui/material/Typography'
 
-// Service Imports
-import { getUserProfileServer } from '@/services/user.service'
+// Hooks
+import { useUserProfile } from '@/hooks/queries/useUser'
 
 const ProfileTab = dynamic(() => import('@views/pages/user-profile/profile'))
 const TeamsTab = dynamic(() => import('@views/pages/user-profile/teams'))
@@ -95,55 +99,45 @@ const tabContentList = (data?: Data): { [key: string]: ReactElement } => ({
   connections: <ConnectionsTab data={data?.users.connections} />
 })
 
-const ProfilePage = async () => {
-  try {
-    // Fetch user profile from API
-    const userData = await getUserProfileServer()
+const ProfilePage = () => {
+  // Use TanStack Query hook to fetch user profile
+  const { data: userData, isLoading, error } = useUserProfile()
 
-    // Map API response to component data format
-    const profileData: Data = {
-      profileHeader: mapToProfileHeader(userData),
-      users: {
-        profile: mapToProfileTab(userData),
-        teams: [],
-        projects: [],
-        connections: []
-      }
-    }
-
-    return <UserProfile data={profileData} tabContentList={tabContentList(profileData)} />
-  } catch (error) {
-    console.error('Error fetching user profile:', error)
-
-    // Return empty data on error
-    const emptyData: Data = {
-      profileHeader: {
-        fullName: '',
-        coverImg: '/images/pages/profile-header-cover.png',
-        location: '',
-        profileImg: '/images/avatars/1.png',
-        joiningDate: '',
-        designation: '',
-        designationIcon: 'tabler-user'
-      },
-      users: {
-        profile: {
-          about: [],
-          contacts: [],
-          overview: [],
-          teams: [],
-          teamsTech: [],
-          connections: [],
-          projectTable: []
-        },
-        teams: [],
-        projects: [],
-        connections: []
-      }
-    }
-
-    return <UserProfile data={emptyData} tabContentList={tabContentList(emptyData)} />
+  // Loading state
+  if (isLoading) {
+    return <PageLoading show={isLoading} />
   }
+
+  // Error state
+  if (error) {
+    return (
+      <Typography color='error' className='p-6'>
+        Lỗi tải thông tin người dùng. Vui lòng thử lại sau.
+      </Typography>
+    )
+  }
+
+  // No data state
+  if (!userData) {
+    return (
+      <Typography color='error' className='p-6'>
+        Không tìm thấy thông tin người dùng
+      </Typography>
+    )
+  }
+
+  // Map API response to component data format
+  const profileData: Data = {
+    profileHeader: mapToProfileHeader(userData),
+    users: {
+      profile: mapToProfileTab(userData),
+      teams: [],
+      projects: [],
+      connections: []
+    }
+  }
+
+  return <UserProfile data={profileData} tabContentList={tabContentList(profileData)} />
 }
 
 export default ProfilePage
