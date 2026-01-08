@@ -45,73 +45,27 @@ export default function QuestionSelector({ selectedQuestions, onSelectionChange 
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([])
   const [loadingSubjects, setLoadingSubjects] = useState(false)
 
-  // Cached questions and pagination returned by server
-  const [allQuestions, setAllQuestions] = useState<Question[]>([])
-  const serverTotalItemsRef = useRef<number | null>(null)
-  const selectedSubjectIdsRef = useRef<string[]>([])
-
   // Filter states - actual values used for API calls
   const [appliedSearchTerm, setAppliedSearchTerm] = useState<string>('')
   const [appliedLevel, setAppliedLevel] = useState<string>('')
-  const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([])
+  const [appliedSubjectIds, setAppliedSubjectIds] = useState<string[]>([])
   const [page, setPage] = useState<number>(1)
   const [limit, setLimit] = useState<number>(10)
 
   // Local states for input fields (not applied until search button is clicked)
   const [searchTerm, setSearchTerm] = useState<string>('')
   const [level, setLevel] = useState<string>('')
-
-  const skipNextFetchRef = useRef(false)
-
-  const filterQuestionsBySubjects = useCallback((questions: Question[], subjectIds: string[]) => {
-    if (!subjectIds || subjectIds.length === 0) {
-      return questions
-    }
-
-    const subjectSet = new Set(subjectIds)
-
-    return questions.filter((question: Question) => {
-      const questionSubjects: string[] = Array.isArray(question.subject_ids)
-        ? question.subject_ids
-        : question.subject_id
-          ? [question.subject_id]
-          : []
-
-      return questionSubjects.some(subjectId => subjectSet.has(subjectId))
-    })
-  }, [])
-
-  const applyQuestionFilters = useCallback(
-    (questions: Question[], subjectIds: string[]) => {
-      const filteredQuestions = filterQuestionsBySubjects(questions, subjectIds)
-
-      const baseTotal = serverTotalItemsRef.current ?? filteredQuestions.length
-      const totalItems = subjectIds.length > 0 ? filteredQuestions.length : baseTotal
-
-      setQuestionData(filteredQuestions)
-      setPaginationData({
-        page,
-        limit,
-        totalItems
-      })
-    },
-    [filterQuestionsBySubjects, limit, page]
-  )
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([])
 
   const fetchQuestions = useCallback(async () => {
     try {
-      if (skipNextFetchRef.current) {
-        skipNextFetchRef.current = false
-
-        return
-      }
-
       setLoading(true)
 
       const queryString = new URLSearchParams()
 
       if (appliedSearchTerm) queryString.append('search', appliedSearchTerm)
       if (appliedLevel) queryString.append('level', appliedLevel)
+      if (appliedSubjectIds.length > 0) queryString.append('subject_id', appliedSubjectIds.join(','))
       queryString.append('page', page.toString())
       queryString.append('limit', limit.toString())
 
@@ -122,33 +76,30 @@ export default function QuestionSelector({ selectedQuestions, onSelectionChange 
       const questionsData = questionsRes.data
       const rawQuestions: Question[] = questionsData?.data || []
 
-      serverTotalItemsRef.current = questionsData?.pagination?.totalItems ?? rawQuestions.length
-      setAllQuestions(rawQuestions)
-      applyQuestionFilters(rawQuestions, selectedSubjectIdsRef.current)
+      setQuestionData(rawQuestions)
+      setPaginationData(
+        questionsData?.pagination || {
+          page,
+          limit,
+          totalItems: rawQuestions.length
+        }
+      )
     } catch (error) {
       console.error(error)
     } finally {
       setLoading(false)
     }
-  }, [applyQuestionFilters, limit, appliedLevel, page, appliedSearchTerm])
+  }, [limit, appliedLevel, page, appliedSearchTerm, appliedSubjectIds])
 
   useEffect(() => {
     fetchQuestions()
   }, [fetchQuestions])
 
-  // Re-apply subject filters without triggering a refetch
-  useEffect(() => {
-    applyQuestionFilters(allQuestions, selectedSubjectIds)
-  }, [allQuestions, selectedSubjectIds, applyQuestionFilters])
-
-  useEffect(() => {
-    selectedSubjectIdsRef.current = selectedSubjectIds
-  }, [selectedSubjectIds])
-
   // Fetch subjects
   useEffect(() => {
     setLoadingSubjects(true)
-    apiClient.get('/api/v1/subjects?page=1&limit=100')
+    apiClient
+      .get('/api/v1/subjects?page=1&limit=100')
       .then(res => {
         setSubjects(res.data?.data || [])
       })
@@ -172,6 +123,7 @@ export default function QuestionSelector({ selectedQuestions, onSelectionChange 
   const handleApplySearch = () => {
     setAppliedSearchTerm(searchTerm)
     setAppliedLevel(level)
+    setAppliedSubjectIds(selectedSubjectIds)
     setPage(1)
   }
 
@@ -234,7 +186,6 @@ export default function QuestionSelector({ selectedQuestions, onSelectionChange 
               const newIds = newValue.map(subject => subject.id)
 
               setSelectedSubjectIds(newIds)
-              selectedSubjectIdsRef.current = newIds
             }}
             renderTags={(value, getTagProps) =>
               value.map((option, index) => {

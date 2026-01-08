@@ -13,9 +13,7 @@ import { toast } from 'react-toastify'
 
 // Component Imports
 import DialogCloseButton from '../dialogs/DialogCloseButton'
-import { apiClient } from '@/libs/axios-client'
-
-
+import { useDeleteQuestion } from '@/hooks/mutations/useQuestionMutations'
 
 type Question = {
   id: string
@@ -35,21 +33,15 @@ export default function ModalConfirmDeleteQuestion({
   question,
   onDeleteSuccess
 }: ModalConfirmDeleteQuestionProps) {
-  const [isDeleting, setIsDeleting] = useState(false)
+  // Use TanStack Query mutation hook
+  const deleteQuestionMutation = useDeleteQuestion()
 
   const handleConfirmDelete = async () => {
     if (!question?.id) return
 
     try {
-      setIsDeleting(true)
-
-      await apiClient.delete(`/api/v1/questions/${question.id}`)
-
-      // Show success toast
-      toast.success('Xóa câu hỏi thành công', {
-        position: 'bottom-right',
-        autoClose: 3000
-      })
+      // Use mutation hook with automatic query invalidation
+      await deleteQuestionMutation.mutateAsync(question.id)
 
       // Close modal
       setOpen(false)
@@ -59,13 +51,8 @@ export default function ModalConfirmDeleteQuestion({
         onDeleteSuccess()
       }
     } catch (error: any) {
+      // Error handling is done by the mutation hook
       console.error(error)
-      toast.error(error.message || 'Có lỗi xảy ra khi xóa câu hỏi', {
-        position: 'bottom-right',
-        autoClose: 3000
-      })
-    } finally {
-      setIsDeleting(false)
     }
   }
 
@@ -117,11 +104,23 @@ export default function ModalConfirmDeleteQuestion({
       </DialogContent>
 
       <DialogActions className='justify-center gap-3 pb-6'>
-        <Button variant='tonal' color='secondary' onClick={handleCancel} disabled={isDeleting} size='large'>
+        <Button
+          variant='tonal'
+          color='secondary'
+          onClick={handleCancel}
+          disabled={deleteQuestionMutation.isPending}
+          size='large'
+        >
           Hủy
         </Button>
-        <Button variant='contained' color='error' onClick={handleConfirmDelete} disabled={isDeleting} size='large'>
-          {isDeleting ? 'Đang xóa...' : 'Xác nhận xóa'}
+        <Button
+          variant='contained'
+          color='error'
+          onClick={handleConfirmDelete}
+          disabled={deleteQuestionMutation.isPending}
+          size='large'
+        >
+          {deleteQuestionMutation.isPending ? 'Đang xóa...' : 'Xác nhận xóa'}
         </Button>
       </DialogActions>
     </Dialog>

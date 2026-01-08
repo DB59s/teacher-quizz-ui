@@ -40,7 +40,7 @@ import CustomTextField from '@/@core/components/mui/TextField'
 import CustomInputLabel from '../form/CustomInputLabel'
 import DialogCloseButton from '../dialogs/DialogCloseButton'
 import SubjectAutocomplete from '../form/SubjectAutocomplete'
-import { apiClient } from '@/libs/axios-client'
+import { useCreateQuestion, useUpdateQuestion } from '@/hooks/mutations/useQuestionMutations'
 
 export default function ModalCreateQuestion({ type, open, setOpen, questionId }: ModalCreateQuestionProps) {
   const {
@@ -66,6 +66,10 @@ export default function ModalCreateQuestion({ type, open, setOpen, questionId }:
   const router = useRouter()
   const pathname = usePathname()
   const isQuestionPath = /question/.test(pathname || '')
+
+  // Use TanStack Query mutation hooks
+  const createQuestionMutation = useCreateQuestion()
+  const updateQuestionMutation = useUpdateQuestion()
 
   // Fetch question data when editing
   useEffect(() => {
@@ -126,24 +130,23 @@ export default function ModalCreateQuestion({ type, open, setOpen, questionId }:
 
     try {
       if (type === 'edit' && questionId) {
-        // Update existing question
-        await apiClient.patch(`/api/v1/questions/${questionId}`, values)
-        toast.success('Cập nhật câu hỏi thành công!', { position: 'bottom-right', autoClose: 5000 })
+        // Update existing question using mutation hook
+        await updateQuestionMutation.mutateAsync({
+          questionId,
+          payload: values
+        })
       } else {
-        // Create new question
-        await apiClient.post('/api/v1/questions', values)
-        toast.success('Tạo câu hỏi thành công!', { position: 'bottom-right', autoClose: 5000 })
+        // Create new question using mutation hook
+        await createQuestionMutation.mutateAsync(values)
       }
 
       reset()
 
-      if (isQuestionPath) {
-        window.dispatchEvent(new CustomEvent('refreshQuestions'))
-      } else {
+      if (!isQuestionPath) {
         router.push('/question')
       }
     } catch (error) {
-      toast.error(type === 'edit' ? 'Có lỗi xảy ra khi cập nhật câu hỏi' : 'Có lỗi xảy ra khi tạo câu hỏi')
+      // Error handling is done by the mutation hooks
       console.error(error)
     }
   }

@@ -34,6 +34,7 @@ import TableRCPaginationCustom from '@/components/table/TableRCPaginationCustom'
 import ModalConfirmDeleteQuestion from '@/components/modal/ModalConfirmDeleteQuestion'
 import ModalCreateQuestion from '@/components/modal/ModalCreateQuestion'
 import QuestionDetailModal from '@/components/dialogs/QuestionDetailModal'
+import UploadKnowledgeModal from '@/components/modal/UploadKnowledgeModal'
 
 type PaginationData = {
   page: number
@@ -58,6 +59,9 @@ export default function QuestionView() {
   // States for edit question modal
   const [isModalEditQuestionOpen, setIsModalEditQuestionOpen] = useState(false)
   const [selectedEditQuestionId, setSelectedEditQuestionId] = useState<string | null>(null)
+
+  // State for upload knowledge modal
+  const [showUploadKnowledgeModal, setShowUploadKnowledgeModal] = useState(false)
 
   // Lấy search params từ URL thực tế
   const currentSearchParams = useMemo(
@@ -197,9 +201,15 @@ export default function QuestionView() {
           <Typography variant='h4' className='font-semibold'>
             Danh sách câu hỏi
           </Typography>
-          <Button variant='contained' color='primary' onClick={() => setIsModalCreateQuestionOpen(true)}>
-            Thêm câu hỏi
-          </Button>
+          <div className='flex gap-3'>
+            <Button variant='outlined' color='primary' onClick={() => setShowUploadKnowledgeModal(true)}>
+              <i className='tabler-book-upload mr-2' />
+              Nạp tri thức
+            </Button>
+            <Button variant='contained' color='primary' onClick={() => setIsModalCreateQuestionOpen(true)}>
+              Thêm câu hỏi
+            </Button>
+          </div>
         </div>
       </Grid>
 
@@ -393,6 +403,9 @@ export default function QuestionView() {
         }}
         questionId={selectedQuestionId}
       />
+
+      {/* Upload Knowledge Modal */}
+      <UploadKnowledgeModal open={showUploadKnowledgeModal} onClose={() => setShowUploadKnowledgeModal(false)} />
     </Grid>
   )
 }

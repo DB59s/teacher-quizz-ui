@@ -37,6 +37,7 @@ import EditQuizModal from '@/components/dialogs/EditQuizModal'
 import { deleteClassQuiz, getClassQuizDetail, updateClassQuiz } from '@/services/classQuizzes.service'
 import useClassQuizzes from '@/hooks/useClassQuizzes'
 import { getQuizStatistics, type QuizStatistics } from '@/services/submission.service'
+import { useCreateClassQuiz } from '@/hooks/mutations/useClassQuizMutations'
 
 type Quiz = {
   id: string
@@ -71,6 +72,9 @@ export default function Exercises({ data }: any) {
 
   // Hook to get class quizzes
   const { quizIds: addedQuizIds, refetch: refetchClassQuizzes } = useClassQuizzes(class_id)
+
+  // TanStack Query mutation hook for adding quiz to class
+  const createClassQuizMutation = useCreateClassQuiz()
 
   // States for available quizzes
   const [availableQuizzes, setAvailableQuizzes] = useState<Quiz[]>([])
@@ -154,14 +158,15 @@ export default function Exercises({ data }: any) {
     if (!selectedQuiz || !startTime || !endTime) return
 
     try {
-      await apiClient.post('/api/v1/class-quizzes', {
+      // Use mutation hook with automatic query invalidation
+      await createClassQuizMutation.mutateAsync({
         quiz_id: selectedQuiz.id,
         class_id: class_id,
         start_time: startTime,
         end_time: endTime
       })
 
-      // Refresh class quizzes list
+      // Refresh class quizzes list (mutation already invalidates queries)
       fetchClassQuizzes()
       refetchClassQuizzes()
 
@@ -172,6 +177,7 @@ export default function Exercises({ data }: any) {
       setShowConfirmDialog(false)
       setShowQuizDialog(false)
     } catch (error) {
+      // Error handling is done by the mutation hook
       console.error('Error adding quiz to class:', error)
     }
   }

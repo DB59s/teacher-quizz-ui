@@ -11,7 +11,7 @@ import Typography from '@mui/material/Typography'
 
 // Component Imports
 import DialogCloseButton from '../dialogs/DialogCloseButton'
-import { apiClient } from '@/libs/axios-client'
+import { useDeleteQuiz } from '@/hooks/mutations/useQuizMutations'
 
 type Quiz = {
   id: string
@@ -32,15 +32,15 @@ export default function ModalConfirmDeleteQuizz({
   quiz,
   onDeleteSuccess
 }: ModalConfirmDeleteQuizzProps) {
-  const [isDeleting, setIsDeleting] = useState(false)
+  // Use TanStack Query mutation hook
+  const deleteQuizMutation = useDeleteQuiz()
 
   const handleConfirmDelete = async () => {
     if (!quiz?.id) return
 
     try {
-      setIsDeleting(true)
-
-      await apiClient.delete(`/api/v1/quizzes/${quiz.id}`)
+      // Use mutation hook with automatic query invalidation
+      await deleteQuizMutation.mutateAsync(quiz.id)
 
       // Close modal
       setOpen(false)
@@ -50,9 +50,8 @@ export default function ModalConfirmDeleteQuizz({
         onDeleteSuccess()
       }
     } catch (error) {
+      // Error handling is done by the mutation hook
       console.error(error)
-    } finally {
-      setIsDeleting(false)
     }
   }
 
@@ -115,11 +114,23 @@ export default function ModalConfirmDeleteQuizz({
       </DialogContent>
 
       <DialogActions className='justify-center gap-3 pb-6'>
-        <Button variant='tonal' color='secondary' onClick={handleCancel} disabled={isDeleting} size='large'>
+        <Button
+          variant='tonal'
+          color='secondary'
+          onClick={handleCancel}
+          disabled={deleteQuizMutation.isPending}
+          size='large'
+        >
           Hủy
         </Button>
-        <Button variant='contained' color='error' onClick={handleConfirmDelete} disabled={isDeleting} size='large'>
-          {isDeleting ? 'Đang xóa...' : 'Xác nhận xóa'}
+        <Button
+          variant='contained'
+          color='error'
+          onClick={handleConfirmDelete}
+          disabled={deleteQuizMutation.isPending}
+          size='large'
+        >
+          {deleteQuizMutation.isPending ? 'Đang xóa...' : 'Xác nhận xóa'}
         </Button>
       </DialogActions>
     </Dialog>

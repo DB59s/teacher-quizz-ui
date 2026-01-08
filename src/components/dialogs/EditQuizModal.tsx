@@ -23,8 +23,9 @@ import { toast } from 'react-toastify'
 import { Plus, Trash2, Edit2 } from 'lucide-react'
 
 // Service Imports
-import { getQuizDetail, updateQuiz, type QuizDetail, type Question } from '@/services/quiz.service'
+import { getQuizDetail, type QuizDetail, type Question } from '@/services/quiz.service'
 import { apiClient } from '@/libs/axios-client'
+import { useUpdateQuiz } from '@/hooks/mutations/useQuizMutations'
 
 // Component Imports
 import PageLoading from '@/theme/PageLoading'
@@ -67,6 +68,9 @@ const EditQuizModal = ({ open, onClose, quizId, onUpdateSuccess, additionalQuest
   const [showAddQuestionDialog, setShowAddQuestionDialog] = useState(false)
   const [showEditQuestionModal, setShowEditQuestionModal] = useState(false)
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null)
+
+  // Use TanStack Query mutation hook
+  const updateQuizMutation = useUpdateQuiz()
 
   useEffect(() => {
     if (open && quizId) {
@@ -141,10 +145,10 @@ const EditQuizModal = ({ open, onClose, quizId, onUpdateSuccess, additionalQuest
   const handleRemoveQuestion = (questionId: string) => {
     if (selectedQuestionIds.length <= 1) {
       toast.error('Quiz phải có ít nhất 1 câu hỏi', { position: 'bottom-right', autoClose: 3000 })
-      
+
       return
     }
-    
+
     setSelectedQuestionIds(selectedQuestionIds.filter(id => id !== questionId))
     toast.success('Đã xóa câu hỏi', { position: 'bottom-right', autoClose: 2000 })
   }
@@ -174,15 +178,14 @@ const EditQuizModal = ({ open, onClose, quizId, onUpdateSuccess, additionalQuest
     setSaving(true)
 
     try {
-      await updateQuiz(quizId, {
-        name: name.trim(),
-        description: description.trim(),
-        question_ids: selectedQuestionIds
-      })
-
-      toast.success('Cập nhật quiz thành công!', {
-        position: 'bottom-right',
-        autoClose: 3000
+      // Use mutation hook with automatic query invalidation
+      await updateQuizMutation.mutateAsync({
+        quizId,
+        payload: {
+          name: name.trim(),
+          description: description.trim(),
+          question_ids: selectedQuestionIds
+        }
       })
 
       if (onUpdateSuccess) {
@@ -192,10 +195,8 @@ const EditQuizModal = ({ open, onClose, quizId, onUpdateSuccess, additionalQuest
       // Đóng modal sau khi cập nhật thành công
       onClose()
     } catch (error: any) {
-      toast.error(error.message || 'Có lỗi xảy ra khi cập nhật quiz', {
-        position: 'bottom-right',
-        autoClose: 3000
-      })
+      // Error handling is done by the mutation hook
+      console.error(error)
     } finally {
       setSaving(false)
     }
