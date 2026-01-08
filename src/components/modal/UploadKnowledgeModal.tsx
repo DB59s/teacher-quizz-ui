@@ -78,7 +78,7 @@ export default function UploadKnowledgeModal({ open, onClose }: UploadKnowledgeM
 
       formData.append('file', selectedFile)
 
-      const response = await apiClient.post('https://api.vuquangduy.io.vn/api/v1/knowledge/upload', formData, {
+      await apiClient.post('https://api.vuquangduy.io.vn/api/v1/knowledge/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
